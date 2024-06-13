@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "fields": [{
+    "name": "email",
+    "type": "string",
+    "depends_on": ["first_name", "last_name"],
+    "target_key": "user.personalInfo.email",
+    "description": "",
+    "validators": ["isString", "isRequired","isEmail", "maxLength"],
+    "constants": [{
+      "validator": "maxLength",
+      "attributes": {
+        "length": 10
+      }
+    }]
+  }]
+}
