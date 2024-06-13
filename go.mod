@@ -1,3 +1,3 @@
-module github.com/ashbeelghouri/go-validate-json
+module github.com/ashbeelghouri/jsonschematics
 
 go 1.22.1
