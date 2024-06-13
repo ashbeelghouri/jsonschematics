@@ -3,7 +3,7 @@
   "fields": [{
     "name": "email",
     "type": "string",
-    "depends_on": ["first_name", "last_name"],
+    "depends_on": ["user.personalInfo.firstname", "user.personalInfo.lastname"],
     "target_key": "user.personalInfo.email",
     "description": "",
     "validators": ["isString", "isRequired","isEmail", "maxLength"],
