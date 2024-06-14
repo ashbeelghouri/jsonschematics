@@ -25,7 +25,13 @@ func (v *Validators) BasicValidators() {
 	v.RegisterValidator("HaveSpecialCharacters", LeastOneUpperCase)
 	v.RegisterValidator("HaveSpecialCharacters", LeastOneLowerCase)
 	v.RegisterValidator("HaveSpecialCharacters", LeastOneDigit)
-	v.RegisterValidator("Regex", Regex)
+	v.RegisterValidator("IsURL", IsURL)
+	v.RegisterValidator("IsNotURL", IsNotURL)
+	v.RegisterValidator("HaveURLHostName", HaveURLHostName)
+	v.RegisterValidator("HaveQueryParameter", HaveQueryParameter)
+	v.RegisterValidator("IsHttps", IsHttps)
+	v.RegisterValidator("IsURL", IsValidUuid)
+	v.RegisterValidator("IsValidUuid", Regex)
 
 	// Number Validators
 	v.RegisterValidator("IsInt", IsInt)

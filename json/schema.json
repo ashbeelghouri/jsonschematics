@@ -1,8 +1,6 @@
 {
   "version": "1",
   "fields": [{
-    "name": "First Name",
-    "type": "string",
     "depends_on": [],
     "target_key": "user.profile.name.first",
     "description": "",
@@ -11,12 +9,11 @@
       "MaxLengthAllowed": {
         "attributes": {
           "max": 2
-        }
+        },
+        "err": "user's first name should have maximum 2 characters"
       }
     }
   }, {
-    "name": "Last Name",
-    "type": "string",
     "depends_on": [],
     "target_key": "user.profile.name.last",
     "description": "",
@@ -24,17 +21,20 @@
     "constants": {
       "MinLengthAllowed": {
         "attributes": {
-          "min": 10
+          "min": 10,
+          "err": "user's last name should have minimum 10 characters"
         }
       }
     }
   }, {
-    "name": "Email",
-    "type": "string",
     "depends_on": ["user.personalInfo.firstname", "user.personalInfo.lastname"],
     "target_key": "user.profile.email",
     "description": "",
-    "validators": ["IsString", "IsRequired","IsEmail"]
-
+    "validators": ["IsString", "IsRequired","IsEmail"],
+    "constants": {
+      "IsEmail": {
+        "err": "User's Email Address Is Invalid"
+      }
+    }
   }]
 }

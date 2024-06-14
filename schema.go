@@ -21,8 +21,6 @@ type Schema struct {
 }
 
 type Field struct {
-	Name        string              `json:"name"`
-	Type        string              `json:"type"`
 	DependsOn   []string            `json:"depends_on"`
 	TargetKey   string              `json:"target_key"`
 	Description string              `json:"description"`
@@ -32,6 +30,7 @@ type Field struct {
 
 type Constant struct {
 	Attributes map[string]interface{} `json:"attributes"`
+	ErrMsg     string                 `json:"err"`
 }
 
 func Load(filePath string) (*Schematics, error) {
@@ -68,7 +67,12 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 		}
 		if customValidator, exists := allValidators[validator]; exists {
 			if err := customValidator(value, f.Constants[validator].Attributes); err != nil {
-				return &validator, err
+				if f.Constants[validator].ErrMsg != "" {
+					log.Printf("Validation Error: %v", err)
+					return &validator, errors.New(f.Constants[validator].ErrMsg)
+				} else {
+					return &validator, err
+				}
 			}
 		} else {
 			return &validator, errors.New("validator not registered")
