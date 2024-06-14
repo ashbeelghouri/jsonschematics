@@ -23,7 +23,7 @@ type Schema struct {
 type Field struct {
 	Name        string              `json:"name"`
 	Type        string              `json:"type"`
-	DependsOn   string              `json:"depends_on"`
+	DependsOn   []string            `json:"depends_on"`
 	TargetKey   string              `json:"target_key"`
 	Description string              `json:"description"`
 	Validators  []string            `json:"validators"`
