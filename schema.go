@@ -2,7 +2,7 @@ package jsonschematics
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/ashbeelghouri/jsonschematics/validators"
 	"log"
 	"os"
@@ -57,45 +57,51 @@ func (s *Schematics) LoadSchema(filePath string) error {
 		log.Fatalf("Failed to parse the data: %v", err)
 		return err
 	}
+	s.Validators.BasicValidators()
 	return nil
 }
 
-func (f *Field) Validate(value interface{}, allValidators map[string]validators.Validator) error {
+func (f *Field) Validate(value interface{}, allValidators map[string]validators.Validator) (*string, error) {
 	for _, validator := range f.Validators {
+		if stringExists(validator, []string{"Exist", "Required", "IsRequired"}) {
+			continue
+		}
 		if customValidator, exists := allValidators[validator]; exists {
 			if err := customValidator(value, f.Constants[validator].Attributes); err != nil {
-				return err
+				return &validator, err
 			}
 		} else {
-			return fmt.Errorf("validator not registered: %s", validator)
+			return &validator, errors.New("validator not registered")
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func (s *Schematics) MakeFlat(data map[string]interface{}) *map[string]interface{} {
-	var flatMap map[string]interface{}
-	FlattenTheMap(data, s.Prefix, s.Separator, flatMap)
-	return &flatMap
+	var dMap DataMap
+	dMap.FlattenTheMap(data, s.Prefix, s.Separator)
+	return &dMap.Data
 }
 
-func (s *Schematics) Validate(d map[string]interface{}) []error {
+func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
 	var errs ErrorMessages
 	data := *s.MakeFlat(d)
 	for _, field := range s.Schema.Fields {
 		value, exists := data[field.TargetKey]
 		if !exists {
 			if stringsInSlice([]string{"MustHave", "Exist", "Required", "IsRequired"}, field.Validators) {
-				errs.AddError(fmt.Sprintf("%s(%s) is a required field", field.TargetKey, field.Name))
+				errs.AddError("IsRequired", "field.TargetKey", "is required")
 			}
 			continue
-		}
-		if err := field.Validate(value, s.Validators.ValidationFns); err != nil {
-			errs.AddError(fmt.Sprintf("Validation Failed for: %s. Error: %v", field.TargetKey, err))
+		} else {
+			validator, err := field.Validate(value, s.Validators.ValidationFns)
+			if err != nil {
+				errs.AddError(*validator, field.TargetKey, err.Error())
+			}
 		}
 	}
 	if errs.HaveErrors() {
-		return errs.Errors()
+		return &errs
 	}
 	return nil
 }

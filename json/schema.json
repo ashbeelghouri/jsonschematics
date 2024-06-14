@@ -1,17 +1,40 @@
 {
-  "version": 1,
+  "version": "1",
   "fields": [{
-    "name": "email",
+    "name": "First Name",
+    "type": "string",
+    "depends_on": [],
+    "target_key": "user.profile.name.first",
+    "description": "",
+    "validators": ["IsString", "IsRequired", "MaxLengthAllowed"],
+    "constants": {
+      "MaxLengthAllowed": {
+        "attributes": {
+          "max": 2
+        }
+      }
+    }
+  }, {
+    "name": "Last Name",
+    "type": "string",
+    "depends_on": [],
+    "target_key": "user.profile.name.last",
+    "description": "",
+    "validators": ["IsString", "IsRequired", "MinLengthAllowed"],
+    "constants": {
+      "MinLengthAllowed": {
+        "attributes": {
+          "min": 10
+        }
+      }
+    }
+  }, {
+    "name": "Email",
     "type": "string",
     "depends_on": ["user.personalInfo.firstname", "user.personalInfo.lastname"],
-    "target_key": "user.personalInfo.email",
+    "target_key": "user.profile.email",
     "description": "",
-    "validators": ["isString", "isRequired","isEmail", "maxLength"],
-    "constants": [{
-      "validator": "maxLength",
-      "attributes": {
-        "length": 10
-      }
-    }]
+    "validators": ["IsString", "IsRequired","IsEmail"]
+
   }]
 }

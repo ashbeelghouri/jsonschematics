@@ -1,19 +1,39 @@
 package jsonschematics
 
-import "reflect"
+import (
+	"encoding/json"
+	"log"
+	"os"
+	"reflect"
+)
 
-func FlattenTheMap(data map[string]interface{}, prefix string, separator string, result map[string]interface{}) {
+type DataMap struct {
+	Data map[string]interface{}
+}
+
+func (d *DataMap) FlattenTheMap(data map[string]interface{}, prefix string, separator string) {
+	// Ensure result is not nil
+	if d.Data == nil {
+		d.Data = make(map[string]interface{})
+	}
+
+	if separator == "" {
+		separator = "."
+	}
+
 	for key, value := range data {
 		newKey := key
 		if prefix != "" {
 			newKey = prefix + separator + key
 		}
+		// Check if the value is a map and recursively flatten it
 		if reflect.TypeOf(value).Kind() == reflect.Map {
 			if nestedMap, ok := value.(map[string]interface{}); ok {
-				FlattenTheMap(nestedMap, newKey, separator, result)
+				d.FlattenTheMap(nestedMap, newKey, separator)
 			}
 		} else {
-			result[newKey] = value
+			// Assign the value to the result map
+			d.Data[newKey] = value
 		}
 	}
 }
@@ -34,4 +54,19 @@ func stringsInSlice(s []string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+func GetJsonFileAsMap(path string) (*map[string]interface{}, error) {
+	var data map[string]interface{}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Failed to load schema file: %v", err)
+		return nil, err
+	}
+	err = json.Unmarshal(content, &data)
+	if err != nil {
+		log.Fatalf("Failed to parse the data: %v", err)
+		return nil, err
+	}
+	return &data, nil
 }

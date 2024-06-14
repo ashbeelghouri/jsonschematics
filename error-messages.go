@@ -1,13 +1,17 @@
 package jsonschematics
 
-import "errors"
-
-type ErrorMessages struct {
-	Messages []string
+type ErrorMessage struct {
+	Message   string
+	Validator string
+	Target    string
 }
 
-func (em *ErrorMessages) AddError(e string) {
-	em.Messages = append(em.Messages, e)
+type ErrorMessages struct {
+	Messages []ErrorMessage
+}
+
+func (em *ErrorMessages) AddError(validator string, target string, e string) {
+	em.Messages = append(em.Messages, ErrorMessage{Message: e, Validator: validator, Target: target})
 }
 
 func (em *ErrorMessages) HaveErrors() bool {
@@ -15,12 +19,4 @@ func (em *ErrorMessages) HaveErrors() bool {
 		return true
 	}
 	return false
-}
-
-func (em *ErrorMessages) Errors() []error {
-	var messages []error
-	for _, e := range em.Messages {
-		messages = append(messages, errors.New(e))
-	}
-	return messages
 }
