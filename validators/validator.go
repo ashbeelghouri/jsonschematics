@@ -13,6 +13,9 @@ func LoadValidator() *Validators {
 }
 
 func (v *Validators) RegisterValidator(name string, fn Validator) {
+	if v.ValidationFns == nil {
+		v.ValidationFns = make(map[string]Validator)
+	}
 	v.ValidationFns[name] = fn
 }
 
