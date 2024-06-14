@@ -87,7 +87,7 @@ func IsAfter(i interface{}, attr map[string]interface{}) error {
 
 	return nil
 }
-func IsInBetweenTime(i interface{}, _ map[string]interface{}) error {
+func IsInBetweenTime(i interface{}, attr map[string]interface{}) error {
 	date := InterfaceToDate(i)
 	comparableMaxDate := InterfaceToDate(attr["maxTime"])
 	comparableMinDate := InterfaceToDate(attr["minTime"])
