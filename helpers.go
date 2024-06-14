@@ -1,4 +1,4 @@
-package main
+package jsonschematics
 
 import "reflect"
 
@@ -18,9 +18,18 @@ func FlattenTheMap(data map[string]interface{}, prefix string, separator string,
 	}
 }
 
-func stringInSlice(s string, slice []string) bool {
+func stringExists(s string, slice []string) bool {
 	for _, item := range slice {
 		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func stringsInSlice(s []string, slice []string) bool {
+	for _, str := range s {
+		if stringExists(str, slice) {
 			return true
 		}
 	}
