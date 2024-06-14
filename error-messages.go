@@ -10,6 +10,11 @@ type ErrorMessages struct {
 	Messages []ErrorMessage
 }
 
+type ArrayOfErrors struct {
+	Errors ErrorMessages
+	ID     interface{}
+}
+
 func (em *ErrorMessages) AddError(validator string, target string, e string) {
 	em.Messages = append(em.Messages, ErrorMessage{Message: e, Validator: validator, Target: target})
 }

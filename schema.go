@@ -13,6 +13,7 @@ type Schematics struct {
 	Validators validators.Validators
 	Prefix     string
 	Separator  string
+	ArrayIdKey string
 }
 
 type Schema struct {
@@ -33,7 +34,21 @@ type Constant struct {
 	ErrMsg     string                 `json:"err"`
 }
 
-func Load(filePath string) (*Schematics, error) {
+func LoadFromMap(s *map[string]interface{}) (*Schematics, error) {
+	jsonData, err := json.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+
+	var sch Schematics
+	err = json.Unmarshal(jsonData, &sch.Schema)
+	if err != nil {
+		sch.Validators.BasicValidators()
+	}
+	return &sch, nil
+}
+
+func LoadFromJsonFile(filePath string) (*Schematics, error) {
 	var s Schematics
 	err := s.LoadSchema(filePath)
 	if err != nil {
@@ -106,6 +121,41 @@ func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
 	}
 	if errs.HaveErrors() {
 		return &errs
+	}
+	return nil
+}
+
+func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErrors {
+	var msg []ArrayOfErrors
+
+	for _, d := range data {
+		arrayId, exists := d[s.ArrayIdKey]
+		if exists {
+			errMessages := s.Validate(d)
+			if errMessages != nil {
+				msg = append(msg, ArrayOfErrors{
+					Errors: *errMessages,
+					ID:     arrayId,
+				})
+			}
+		} else {
+			msg = append(msg, ArrayOfErrors{
+				Errors: ErrorMessages{
+					Messages: []ErrorMessage{
+						{
+							Message:   "unable to validate the array, ArrayIdKey not defined in schematics",
+							Validator: "ALL",
+							Target:    "ALL",
+						},
+					},
+				},
+				ID: nil,
+			})
+		}
+	}
+
+	if len(msg) > 0 {
+		return &msg
 	}
 	return nil
 }
