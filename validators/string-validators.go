@@ -6,6 +6,10 @@ import (
 	"regexp"
 )
 
+/*
+[TODO] --> introduce the custom error string inside the validator constant for each constant!
+*/
+
 func IsString(value interface{}, _ map[string]interface{}) error {
 	_, ok := value.(string)
 	if !ok {
