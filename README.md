@@ -77,13 +77,50 @@ func main() {
 ### Structs
 
 #### Schematics
-- Validate(data map[string]interface{}) error
-- ToJSONSchema() (string, error)
+- Schema                                       Schema
+- Validators                                   validators.Validators
+- Prefix                                       string
+- Separator                                    string
+- ArrayIdKey                                   string
+- LoadSchema(filePath string)                  error
+- Validate(data map[string]interface{})        *ErrorMessages
+- ValidateArray(data []map[string]interface{}) *[]ArrayOfErrors
+- MakeFlat(data map[string]interface)          *map[string]interface{}
+
+##### Schema
+- Version string
+- Fields []Field
+
+##### Field
+- DependsOn   []string
+- TargetKey   string
+- Description string
+- Validators  []string
+- Constants   map[string]interface{}
+
+##### Constant
+- Attributes map[string]interface{}
+- ErrMsg     string
 
 #### Errors
 - ArrayOfErrors
 - ErrorMessages
 - ErrorMessage
+
+##### ArrayOfErrors
+- Errors ErrorMessages
+- ID     interface{}
+
+##### ErrorMessages
+- Messages                                                 []ErrorMessage
+- AddError(validator string, target string, err string)
+- HaveErrors()                                             bool
+
+##### ErrorMessage
+- Message   string
+- Validator string
+- Target    string
+
 
 ## Contributing
 1. Fork the repository on GitHub.
