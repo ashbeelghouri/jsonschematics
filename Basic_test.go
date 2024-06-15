@@ -6,13 +6,12 @@ import (
 	"testing"
 )
 
-func TestLoader(t *testing.T) {
-	schema, err := Load("json/schema.json")
+func TestAll(t *testing.T) {
+	schema, err := LoadFromJsonFile("json/schema.json")
 	if err != nil {
 		t.Error(err)
 	}
 	log.Println(schema)
-
 	data, err := GetJsonFileAsMap("json/data.json")
 	if err != nil {
 		t.Error(err)
