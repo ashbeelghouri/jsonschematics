@@ -3,6 +3,7 @@ package jsonschematics
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/validators"
 	"log"
 	"os"
@@ -11,7 +12,7 @@ import (
 type Schematics struct {
 	Schema     Schema
 	Validators validators.Validators
-	Prefix     string
+	Operators  operators.Operators
 	Separator  string
 	ArrayIdKey string
 }
@@ -27,6 +28,7 @@ type Field struct {
 	Description string              `json:"description"`
 	Validators  []string            `json:"validators"`
 	Constants   map[string]Constant `json:"constants"`
+	Operators   []string            `json:"operators"`
 }
 
 type Constant struct {
@@ -55,7 +57,6 @@ func LoadFromJsonFile(filePath string) (*Schematics, error) {
 		log.Fatalf("Can not load the schema: %v", err)
 		return nil, err
 	}
-	s.Prefix = ""
 	s.Separator = "."
 	return &s, nil
 }
@@ -98,7 +99,7 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 
 func (s *Schematics) MakeFlat(data map[string]interface{}) *map[string]interface{} {
 	var dMap DataMap
-	dMap.FlattenTheMap(data, s.Prefix, s.Separator)
+	dMap.FlattenTheMap(data, "", s.Separator)
 	return &dMap.Data
 }
 
