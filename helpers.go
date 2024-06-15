@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 )
 
 type DataMap struct {
@@ -36,6 +37,31 @@ func (d *DataMap) FlattenTheMap(data map[string]interface{}, prefix string, sepa
 			d.Data[newKey] = value
 		}
 	}
+}
+
+// Deflate function to convert a flattened map back into a nested map
+func (d *DataMap) DeflateMap(data map[string]interface{}, separator string) map[string]interface{} {
+	if separator == "" {
+		separator = "."
+	}
+
+	result := make(map[string]interface{})
+	for key, value := range data {
+		keys := strings.Split(key, separator)
+		currentMap := result
+		for i, part := range keys {
+			if i == len(keys)-1 {
+				currentMap[part] = value
+			} else {
+				if _, exists := currentMap[part]; !exists {
+					currentMap[part] = make(map[string]interface{})
+				}
+				currentMap = currentMap[part].(map[string]interface{})
+			}
+		}
+	}
+
+	return result
 }
 
 func stringExists(s string, slice []string) bool {

@@ -5,6 +5,7 @@
     "target_key": "user.profile.name.first",
     "description": "",
     "validators": ["IsString", "IsRequired", "MaxLengthAllowed"],
+    "operators": ["Capitalize"],
     "constants": {
       "MaxLengthAllowed": {
         "attributes": {
@@ -23,6 +24,19 @@
         "attributes": {
           "min": 10,
           "err": "user's last name should have minimum 10 characters"
+        }
+      }
+    }
+  }, {
+    "depends_on": [],
+    "target_key": "user.profile.age",
+    "description": "",
+    "validators": ["IsNumber", "IsRequired", "MaxAllowed"],
+    "constants": {
+      "MaxAllowed": {
+        "attributes": {
+          "max": 20,
+          "err": "user's age is greater than 20"
         }
       }
     }
