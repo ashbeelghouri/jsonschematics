@@ -77,6 +77,17 @@ func main() {
 ### Structs
 
 #### Schematics
+| Name | Input | Type | Output |
+|-----------------|-----------------|-----------------|-----------------|
+| Schema  | Row 1 Column 2  | Row 1 Column 3  |-----------------|
+| Validators  | Row 2 Column 2  | Row 2 Column 3  |-----------------|
+| Prefix  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
+| Separator  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
+| ArrayIdKey  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
+| LoadSchema  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
+| Validate  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
+| ValidateArray  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
+| MakeFlat  | Row 3 Column 2  | Row 3 Column 3  |-----------------|
 - Schema                                       Schema
 - Validators                                   validators.Validators
 - Prefix                                       string
