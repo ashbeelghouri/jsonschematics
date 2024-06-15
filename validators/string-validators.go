@@ -41,6 +41,40 @@ func StringInArr(i interface{}, attr map[string]interface{}) error {
 	return nil
 }
 
+func LIKE(i interface{}, attr map[string]interface{}) error {
+	str := i.(string)
+
+	pattern, ok := attr["pattern"].(string)
+	if ok {
+		replacer := strings.NewReplacer(
+			".", "\\.",
+			"+", "\\+",
+			"?", "\\?",
+			"(", "\\(",
+			")", "\\)",
+			"[", "\\[",
+			"]", "\\]",
+			"{", "\\{",
+			"}", "\\}",
+			"^", "\\^",
+			"$", "\\$",
+		)
+		regexPattern := replacer.Replace(pattern)
+		regexPattern = strings.ReplaceAll(regexPattern, "%", ".*")
+		regexPattern = strings.ReplaceAll(regexPattern, "_", ".")
+		regexPattern = "^" + regexPattern + "$"
+
+		matched, _ := regexp.MatchString(regexPattern, str)
+
+		if !matched {
+			return errors.New(fmt.Sprintf("%s is not a LIKE %s", str))
+		}
+	} else {
+		return errors.New(fmt.Sprintf("like pattern is invalid or is not provided"))
+	}
+	return nil
+}
+
 func IsEmail(i interface{}, _ map[string]interface{}) error {
 	str := i.(string)
 	const pattern = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`

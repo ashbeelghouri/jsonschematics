@@ -33,6 +33,7 @@ func (v *Validators) BasicValidators() {
 	v.RegisterValidator("HaveQueryParameter", HaveQueryParameter)
 	v.RegisterValidator("IsHttps", IsHttps)
 	v.RegisterValidator("IsURL", IsValidUuid)
+	v.RegisterValidator("LIKE", LIKE)
 	v.RegisterValidator("IsValidUuid", Regex)
 
 	// Number Validators
