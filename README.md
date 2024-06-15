@@ -21,7 +21,7 @@ go get github.com/ashbeelghouri/jsonschematics
 ### Validating JSON Data
 You can validate JSON data against a defined schematic using the Validate function. Here's an example:
 
-```sh
+```golang
 package main
 
 import (
@@ -51,7 +51,7 @@ func main() {
 ### Loading Schematics From JSON file
 Instead of defining the Schema directly, Load the schema from JSON file:
 
-```sh
+```golang
 package main
 
 import (
@@ -74,7 +74,7 @@ see the API Reference for json fields mapping.
 ### Loading Schematics From map[string]interface{}
 If you want to load the schema from map[string]interface, you can use the below example:
 
-```sh
+```golang
 package main
 
 import (
@@ -96,6 +96,79 @@ func main() {
 }
 ```
 
+### Adding Custom Functions
+You can also add your functions to validate the data:
+
+#### Example 1
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ashbeelghouri/jsonschematics"
+)
+
+func main() {
+    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+    if err != nil {
+        fmt.Println("Unable to load the schema:", err)
+    }
+    schema.Validators.RegisterValidator("StringIsInsideArr", StringInArr)
+}
+
+func StringInArr(i interface{}, attr map[string]interface{}) error {
+	str := i.(string)
+	strArr := attr["arr"].([]string)
+	found := false
+	if len(strArr) > 0 {
+		for _, item := range strArr {
+			if item == str {
+				found = true
+			}
+		}
+	}
+	if !found {
+		return errors.New(fmt.Sprintf("string not found in array"))
+	}
+	return nil
+}
+
+```
+
+#### Example 2
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ashbeelghouri/jsonschematics"
+)
+
+func main() {
+    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+    if err != nil {
+        fmt.Println("Unable to load the schema:", err)
+    }
+    schema.Validators.RegisterValidator("StringIsInsideArr", func(i interface{}, attr map[string]interface{}) error {
+    	str := i.(string)
+    	strArr := attr["arr"].([]string)
+    	found := false
+    	if len(strArr) > 0 {
+    		for _, item := range strArr {
+    			if item == str {
+    				found = true
+    			}
+    		}
+    	}
+    	if !found {
+    		return errors.New(fmt.Sprintf("string not found in array"))
+    	}
+    	return nil
+    })
+}
+
+```
+
 ## API Reference
 
 ### Example Files
@@ -105,7 +178,7 @@ func main() {
 ### Structs
 
 #### Schematics
-```sh
+```golang
 - Schema                                       Schema
 - Validators                                   validators.Validators
 - Prefix                                       string
@@ -118,7 +191,7 @@ func main() {
 ```
 
 ##### Schema
-```sh
+```golang
 - Version string `json:"version"`
 - Fields []Field `json:"fields"`
 ```
@@ -130,7 +203,7 @@ func main() {
 ```
 
 ##### Field
-```sh
+```golang
 - DependsOn   []string `json:"depends_on"`
 - TargetKey   string `json:"target_key"`
 - Description string `json:"description"`
@@ -148,7 +221,7 @@ func main() {
 ```
 
 ##### Constant
-```sh
+```golang
 - Attributes map[string]interface{} `json:"attributes"`
 - ErrMsg     string `json:"err"`
 ```
@@ -164,27 +237,27 @@ func main() {
 - ErrorMessage
 
 ##### ArrayOfErrors
-```sh
+```golang
 - Errors ErrorMessages
 - ID     interface{}
 ```
 
 ##### ErrorMessages
-```
+```golang
 - Messages                                                 []ErrorMessage
 - AddError(validator string, target string, err string)
 - HaveErrors()                                             bool
 ```
 
 ##### ErrorMessage
-```sh
+```golang
 - Message   string
 - Validator string
 - Target    string
 ```
 
 #### Go Version
-```sh
+```golang
 go 1.22.1
 ```
 

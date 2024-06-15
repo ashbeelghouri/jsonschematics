@@ -17,6 +17,7 @@ func (v *Validators) BasicValidators() {
 	// String Validators
 	v.RegisterValidator("IsString", IsString)
 	v.RegisterValidator("NotEmpty", NotEmpty)
+	v.RegisterValidator("StringInArr", StringInArr)
 	v.RegisterValidator("IsEmail", IsEmail)
 	v.RegisterValidator("MaxLengthAllowed", MaxLengthAllowed)
 	v.RegisterValidator("MinLengthAllowed", MinLengthAllowed)

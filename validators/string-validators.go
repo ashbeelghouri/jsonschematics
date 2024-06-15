@@ -24,6 +24,23 @@ func NotEmpty(i interface{}, _ map[string]interface{}) error {
 	return nil
 }
 
+func StringInArr(i interface{}, attr map[string]interface{}) error {
+	str := i.(string)
+	strArr := attr["arr"].([]string)
+	found := false
+	if len(strArr) > 0 {
+		for _, item := range strArr {
+			if item == str {
+				found = true
+			}
+		}
+	}
+	if !found {
+		return errors.New(fmt.Sprintf("string not found in array"))
+	}
+	return nil
+}
+
 func IsEmail(i interface{}, _ map[string]interface{}) error {
 	str := i.(string)
 	const pattern = `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
