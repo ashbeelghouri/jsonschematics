@@ -15,8 +15,8 @@ type ArrayOfErrors struct {
 	ID     interface{}
 }
 
-func (em *ErrorMessages) AddError(validator string, target string, e string) {
-	em.Messages = append(em.Messages, ErrorMessage{Message: e, Validator: validator, Target: target})
+func (em *ErrorMessages) AddError(validator string, target string, err string) {
+	em.Messages = append(em.Messages, ErrorMessage{Message: err, Validator: validator, Target: target})
 }
 
 func (em *ErrorMessages) HaveErrors() bool {
