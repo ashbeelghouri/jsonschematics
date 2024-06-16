@@ -18,7 +18,9 @@ go get github.com/ashbeelghouri/jsonschematics
 
 ## Usage
 
-### Validating JSON Data
+### Validation
+
+#### Validating JSON Data
 You can validate JSON data against a defined schematic using the Validate function. Here's an example:
 
 ```golang
@@ -48,7 +50,7 @@ func main() {
 }
 ```
 
-### Loading Schematics From JSON file
+#### Loading Schematics From JSON file
 Instead of defining the Schema directly, Load the schema from JSON file:
 
 ```golang
@@ -71,7 +73,7 @@ func main() {
 see the API Reference for json fields mapping.
 
 
-### Loading Schematics From map[string]interface{}
+#### Loading Schematics From map[string]interface{}
 If you want to load the schema from map[string]interface, you can use the below example:
 
 ```golang
@@ -96,10 +98,10 @@ func main() {
 }
 ```
 
-### Adding Custom Functions
+#### Adding Custom Validation Functions
 You can also add your functions to validate the data:
 
-#### Example 1
+##### Example 1
 ```golang
 package main
 
@@ -135,7 +137,7 @@ func StringInArr(i interface{}, attr map[string]interface{}) error {
 
 ```
 
-#### Example 2
+##### Example 2
 ```golang
 package main
 
@@ -169,6 +171,57 @@ func main() {
 
 ```
 
+### Operations
+
+#### Perform Operations on Object
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ashbeelghouri/jsonschematics"
+)
+
+func main() {
+    schema := jsonschematics.Schematics{
+        // Define your schema here
+    }
+
+    data := map[string]interface{}{
+        "Name": "John",
+        "Age":  30,
+    }
+
+    newData := schema.PerformOperations(data)
+    fmt.Printf("Data after Operations: %v", newData)
+}
+```
+
+#### Adding Custom Operator Functions
+You can also add your functions to operate on the data:
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ashbeelghouri/jsonschematics"
+)
+
+func main() {
+    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+    if err != nil {
+        fmt.Println("Unable to load the schema:", err)
+    }
+    schema.Operators.RegisterOperation("CapitalizeString", Capitalize)
+}
+
+func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
+	str := i.(string)
+	var opResult interface{} = strings.ToUpper(string(str[0])) + strings.ToLower(str[1:])
+	return &opResult
+}
+```
+
 ## API Reference
 
 ### Example Files
@@ -179,15 +232,18 @@ func main() {
 
 #### Schematics
 ```golang
-- Schema                                       Schema
-- Validators                                   validators.Validators
-- Prefix                                       string
-- Separator                                    string
-- ArrayIdKey                                   string
-- LoadSchema(filePath string)                  error
-- Validate(data map[string]interface{})        *ErrorMessages
-- ValidateArray(data []map[string]interface{}) *[]ArrayOfErrors
-- MakeFlat(data map[string]interface)          *map[string]interface{}
+- Schema                                       		Schema
+- Validators                                   		validators.Validators
+- Operators				       		operators.Operators
+- Prefix                                       		string
+- Separator                                    		string
+- ArrayIdKey                                   		string
+- LoadSchema(filePath string)                  		error
+- Validate(data map[string]interface{})        		*ErrorMessages
+- ValidateArray(data []map[string]interface{}) 		*[]ArrayOfErrors
+- PerformOperations(data map[string]interface{})	*map[string]interface{}
+- PerformArrOperations(data []map[string]interface{})	*[]map[string]interface{}
+- MakeFlat(data map[string]interface)          		*map[string]interface{}
 ```
 
 ##### Schema
@@ -204,11 +260,12 @@ func main() {
 
 ##### Field
 ```golang
-- DependsOn   []string `json:"depends_on"`
-- TargetKey   string `json:"target_key"`
-- Description string `json:"description"`
-- Validators  []string `json:"validators"`
-- Constants   map[string]interface{} `json:"constants"`
+- DependsOn   []string 			`json:"depends_on"`
+- TargetKey   string 			`json:"target_key"`
+- Description string 			`json:"description"`
+- Validators  []string 			`json:"validators"`
+- Constants   map[string]interface{} 	`json:"constants"`
+- Operators   []string            	`json:"operators"`
 ```
 
 ###### >Explanation
@@ -222,8 +279,8 @@ func main() {
 
 ##### Constant
 ```golang
-- Attributes map[string]interface{} `json:"attributes"`
-- ErrMsg     string `json:"err"`
+- Attributes map[string]interface{} 	`json:"attributes"`
+- ErrMsg     string 			`json:"err"`
 ```
 ###### >Explanation
 ```sh
@@ -265,7 +322,14 @@ go 1.22.1
 1. Fork the repository on GitHub.
 2. Create a new branch for your feature or bug fix.
 3. Write tests to cover your changes.
-4. Send a pull request.
+4. Update Documentation to include your features/changes.
+5. Add yourself to contributers.
+6. Send a pull request.
+
+### Contributers
+<a href="https://github.com/ashbeelghouri">
+  <img src="https://avatars.githubusercontent.com/u/41609537?s=400&u=1b9ea072fc9a11acf32d86c5196a08f2696a458a&v=4" width="50px" height: "50px"/>
+</a>
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/ashbeelghouri/jsonschematics/blob/master/LICENSE) file for details.
