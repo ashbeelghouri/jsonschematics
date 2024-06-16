@@ -95,3 +95,18 @@ func GetJsonFileAsMap(path string) (*map[string]interface{}, error) {
 	}
 	return &data, nil
 }
+
+func GetJsonFileAsMapArray(path string) (*[]map[string]interface{}, error) {
+	var data []map[string]interface{}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Failed to load schema file: %v", err)
+		return nil, err
+	}
+	err = json.Unmarshal(content, &data)
+	if err != nil {
+		log.Fatalf("Failed to parse the data: %v", err)
+		return nil, err
+	}
+	return &data, nil
+}
