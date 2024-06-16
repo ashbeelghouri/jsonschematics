@@ -7,6 +7,7 @@
 - Validate JSON objects against defined schematics
 - Convert schematics to JSON schemas
 - Handle complex data validation scenarios
+- Perform Operations on the Data
 
 ## Installation
 
