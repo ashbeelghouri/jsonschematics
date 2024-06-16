@@ -103,7 +103,6 @@ func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op
 	for _, operator := range f.Operators {
 		result := f.PerformOperation(value, operator, allOperations)
 		if result != nil {
-			log.Printf("result of operation: %s is %v", operator, result)
 			value = result
 		}
 	}
@@ -155,9 +154,10 @@ func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
 
 func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErrors {
 	var msg []ArrayOfErrors
-
 	for _, d := range data {
-		arrayId, exists := d[s.ArrayIdKey]
+		var dMap DataMap
+		dMap.FlattenTheMap(d, "", s.Separator)
+		arrayId, exists := dMap.Data[s.ArrayIdKey]
 		if exists {
 			errMessages := s.Validate(d)
 			if errMessages != nil {
@@ -199,4 +199,16 @@ func (s *Schematics) PerformOperations(data map[string]interface{}) *map[string]
 	d := s.Deflate(data)
 
 	return &d
+}
+
+func (s *Schematics) PerformArrOperations(data []map[string]interface{}) *[]map[string]interface{} {
+	var obj []map[string]interface{}
+	for _, d := range data {
+		results := s.PerformOperations(d)
+		obj = append(obj, *results)
+	}
+	if len(obj) > 0 {
+		return &obj
+	}
+	return nil
 }

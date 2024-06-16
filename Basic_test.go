@@ -1,49 +1,75 @@
 package jsonschematics
 
 import (
+	"encoding/json"
 	"log"
 	"testing"
 	"time"
 )
 
-func TestAll(t *testing.T) {
+func TestForObjData(t *testing.T) {
+	fnTimeStart := time.Now()
 	schema, err := LoadFromJsonFile("json/schema.json")
 	if err != nil {
 		t.Error(err)
 	}
-	//log.Println(schema)
 	data, err := GetJsonFileAsMap("json/data.json")
 	if err != nil {
 		t.Error(err)
 	}
 	start := time.Now()
-	_ = schema.Validate(*data)
+	errs := schema.Validate(*data)
 	end := time.Now()
 
-	log.Printf("Time taken to execute the validation functions: %v", end.Sub(start))
+	log.Printf("[SINGLE OBJ] Validation Time: %v", end.Sub(start))
 
-	//b, err := json.Marshal(errs)
-	//if err != nil {
-	//	log.Fatalf("err: %v", err)
-	//}
+	_, err = json.Marshal(errs)
+	if err != nil {
+		log.Fatalf("err: %v", err)
+	}
 
+	start = time.Now()
 	newData := schema.PerformOperations(*data)
-	log.Printf("New DATA :::>> %v", newData)
+	end = time.Now()
+	log.Printf("[SINGLE OBJ] Operaions Time: %v", end.Sub(start))
+	log.Printf("[SINGLE OBJ] Updated DATA: %v", newData)
 
-	//log.Println(string(b))
+	log.Printf("[SINGLE OBJ] total time taken: %v", time.Now().Sub(fnTimeStart))
+	log.Println("-------------------------------------------")
 }
 
-func TestDeFlatMap(t *testing.T) {
-	//flattened := map[string]interface{}{
-	//	"person.name.first": "John",
-	//	"person.name.last":  "Doe",
-	//	"person.age":        30,
-	//	"address.city":      "New York",
-	//	"address.zip":       "10001",
-	//}
-	//
-	//d := &DataMap{}
-	//deflate := d.DeflateMap(flattened, ".")
-	//
-	//log.Printf("Unflattened Map: %+v\n", deflate)
+func TestForArrayData(t *testing.T) {
+	fnTimeStart := time.Now()
+	schema1, err := LoadFromJsonFile("json/schema.json")
+	schema1.ArrayIdKey = "user.id"
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := GetJsonFileAsMapArray("json/arr-data.json")
+	if err != nil {
+		t.Error(err)
+	}
+	start := time.Now()
+	errs := schema1.ValidateArray(*data)
+	end := time.Now()
+
+	log.Printf("[ARRAY OF OBJ] Validation Time: %v", end.Sub(start))
+	if errs != nil && len(*errs) > 0 {
+		for _, j := range *errs {
+			obj, err := json.Marshal(j)
+			if err != nil {
+				log.Fatalf("err: %v", err)
+			}
+			log.Printf("array validations >>>> %v", string(obj))
+		}
+	}
+	if errs == nil || !(len(*errs) > 0) {
+		start = time.Now()
+		newData := schema1.PerformArrOperations(*data)
+		end = time.Now()
+		log.Printf("[ARRAY OF OBJ] Operation Time: %v", end.Sub(start))
+		log.Printf("[ARRAY OF OBJ] Updated Data: %v", newData)
+	}
+	log.Printf("[ARRAY OF OBJ] total time taken: %v", time.Now().Sub(fnTimeStart))
+	log.Println("-------------------------------------------")
 }
