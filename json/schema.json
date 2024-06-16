@@ -5,10 +5,11 @@
     "target_key": "user.profile.name.first",
     "description": "",
     "validators": ["IsString", "IsRequired", "MaxLengthAllowed"],
+    "operators": ["Capitalize"],
     "constants": {
       "MaxLengthAllowed": {
         "attributes": {
-          "max": 2
+          "max": 20
         },
         "err": "user's first name should have maximum 2 characters"
       }
@@ -18,11 +19,25 @@
     "target_key": "user.profile.name.last",
     "description": "",
     "validators": ["IsString", "IsRequired", "MinLengthAllowed"],
+    "operators": ["UpperCase"],
     "constants": {
       "MinLengthAllowed": {
         "attributes": {
-          "min": 10,
+          "min": 5,
           "err": "user's last name should have minimum 10 characters"
+        }
+      }
+    }
+  }, {
+    "depends_on": [],
+    "target_key": "user.profile.age",
+    "description": "",
+    "validators": ["IsNumber", "IsRequired", "MaxAllowed"],
+    "constants": {
+      "MaxAllowed": {
+        "attributes": {
+          "max": 20,
+          "err": "user's age is greater than 20"
         }
       }
     }

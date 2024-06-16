@@ -33,10 +33,11 @@ func (v *Validators) BasicValidators() {
 	v.RegisterValidator("HaveQueryParameter", HaveQueryParameter)
 	v.RegisterValidator("IsHttps", IsHttps)
 	v.RegisterValidator("IsURL", IsValidUuid)
+	v.RegisterValidator("LIKE", LIKE)
 	v.RegisterValidator("IsValidUuid", Regex)
 
 	// Number Validators
-	v.RegisterValidator("IsInt", IsInt)
+	v.RegisterValidator("IsNumber", IsNumber)
 	v.RegisterValidator("MaxAllowed", MaxAllowed)
 	v.RegisterValidator("MinAllowed", MinAllowed)
 	v.RegisterValidator("InBetween", InBetween)

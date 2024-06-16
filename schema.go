@@ -3,6 +3,7 @@ package jsonschematics
 import (
 	"encoding/json"
 	"errors"
+	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/validators"
 	"log"
 	"os"
@@ -11,7 +12,7 @@ import (
 type Schematics struct {
 	Schema     Schema
 	Validators validators.Validators
-	Prefix     string
+	Operators  operators.Operators
 	Separator  string
 	ArrayIdKey string
 }
@@ -27,6 +28,7 @@ type Field struct {
 	Description string              `json:"description"`
 	Validators  []string            `json:"validators"`
 	Constants   map[string]Constant `json:"constants"`
+	Operators   []string            `json:"operators"`
 }
 
 type Constant struct {
@@ -44,6 +46,7 @@ func LoadFromMap(s *map[string]interface{}) (*Schematics, error) {
 	err = json.Unmarshal(jsonData, &sch.Schema)
 	if err != nil {
 		sch.Validators.BasicValidators()
+		sch.Operators.LoadBasicOperations()
 	}
 	return &sch, nil
 }
@@ -55,7 +58,6 @@ func LoadFromJsonFile(filePath string) (*Schematics, error) {
 		log.Fatalf("Can not load the schema: %v", err)
 		return nil, err
 	}
-	s.Prefix = ""
 	s.Separator = "."
 	return &s, nil
 }
@@ -72,6 +74,7 @@ func (s *Schematics) LoadSchema(filePath string) error {
 		return err
 	}
 	s.Validators.BasicValidators()
+	s.Operators.LoadBasicOperations()
 	return nil
 }
 
@@ -96,10 +99,34 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 	return nil, nil
 }
 
+func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op) interface{} {
+	for _, operator := range f.Operators {
+		result := f.PerformOperation(value, operator, allOperations)
+		if result != nil {
+			value = result
+		}
+	}
+	return value
+}
+
+func (f *Field) PerformOperation(value interface{}, operation string, allOperations map[string]operators.Op) interface{} {
+	customValidator, exists := allOperations[operation]
+	if !exists {
+		return nil
+	}
+	constants := f.Constants["_"+operation].Attributes
+	result := customValidator(value, constants)
+	return *result
+}
+
 func (s *Schematics) MakeFlat(data map[string]interface{}) *map[string]interface{} {
 	var dMap DataMap
-	dMap.FlattenTheMap(data, s.Prefix, s.Separator)
+	dMap.FlattenTheMap(data, "", s.Separator)
 	return &dMap.Data
+}
+
+func (s *Schematics) Deflate(data map[string]interface{}) map[string]interface{} {
+	return DeflateMap(data, s.Separator)
 }
 
 func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
@@ -127,9 +154,10 @@ func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
 
 func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErrors {
 	var msg []ArrayOfErrors
-
 	for _, d := range data {
-		arrayId, exists := d[s.ArrayIdKey]
+		var dMap DataMap
+		dMap.FlattenTheMap(d, "", s.Separator)
+		arrayId, exists := dMap.Data[s.ArrayIdKey]
 		if exists {
 			errMessages := s.Validate(d)
 			if errMessages != nil {
@@ -156,6 +184,31 @@ func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErro
 
 	if len(msg) > 0 {
 		return &msg
+	}
+	return nil
+}
+
+func (s *Schematics) PerformOperations(data map[string]interface{}) *map[string]interface{} {
+	data = *s.MakeFlat(data)
+	for _, field := range s.Schema.Fields {
+		value, exists := data[field.TargetKey]
+		if exists {
+			data[field.TargetKey] = field.Operate(value, s.Operators.OpFunctions)
+		}
+	}
+	d := s.Deflate(data)
+
+	return &d
+}
+
+func (s *Schematics) PerformArrOperations(data []map[string]interface{}) *[]map[string]interface{} {
+	var obj []map[string]interface{}
+	for _, d := range data {
+		results := s.PerformOperations(d)
+		obj = append(obj, *results)
+	}
+	if len(obj) > 0 {
+		return &obj
 	}
 	return nil
 }
