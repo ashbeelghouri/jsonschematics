@@ -1,7 +1,6 @@
 package jsonschematics
 
 import (
-	"encoding/json"
 	"log"
 	"testing"
 	"time"
@@ -18,29 +17,33 @@ func TestAll(t *testing.T) {
 		t.Error(err)
 	}
 	start := time.Now()
-	errs := schema.Validate(*data)
+	_ = schema.Validate(*data)
 	end := time.Now()
 
-	log.Printf("Time taken to execute the function: %v", end.Sub(start))
+	log.Printf("Time taken to execute the validation functions: %v", end.Sub(start))
 
-	b, err := json.Marshal(errs)
-	if err != nil {
-		log.Fatalf("err: %v", err)
-	}
-	log.Println(string(b))
+	//b, err := json.Marshal(errs)
+	//if err != nil {
+	//	log.Fatalf("err: %v", err)
+	//}
+
+	newData := schema.PerformOperations(*data)
+	log.Printf("New DATA :::>> %v", newData)
+
+	//log.Println(string(b))
 }
 
 func TestDeFlatMap(t *testing.T) {
-	flattened := map[string]interface{}{
-		"person.name.first": "John",
-		"person.name.last":  "Doe",
-		"person.age":        30,
-		"address.city":      "New York",
-		"address.zip":       "10001",
-	}
-
-	d := &DataMap{}
-	deflate := d.DeflateMap(flattened, ".")
-
-	log.Printf("Unflattened Map: %+v\n", deflate)
+	//flattened := map[string]interface{}{
+	//	"person.name.first": "John",
+	//	"person.name.last":  "Doe",
+	//	"person.age":        30,
+	//	"address.city":      "New York",
+	//	"address.zip":       "10001",
+	//}
+	//
+	//d := &DataMap{}
+	//deflate := d.DeflateMap(flattened, ".")
+	//
+	//log.Printf("Unflattened Map: %+v\n", deflate)
 }
