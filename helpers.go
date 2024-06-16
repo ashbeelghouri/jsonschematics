@@ -39,8 +39,7 @@ func (d *DataMap) FlattenTheMap(data map[string]interface{}, prefix string, sepa
 	}
 }
 
-// Deflate function to convert a flattened map back into a nested map
-func (d *DataMap) DeflateMap(data map[string]interface{}, separator string) map[string]interface{} {
+func DeflateMap(data map[string]interface{}, separator string) map[string]interface{} {
 	if separator == "" {
 		separator = "."
 	}

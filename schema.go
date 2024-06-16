@@ -46,6 +46,7 @@ func LoadFromMap(s *map[string]interface{}) (*Schematics, error) {
 	err = json.Unmarshal(jsonData, &sch.Schema)
 	if err != nil {
 		sch.Validators.BasicValidators()
+		sch.Operators.LoadBasicOperations()
 	}
 	return &sch, nil
 }
@@ -73,6 +74,7 @@ func (s *Schematics) LoadSchema(filePath string) error {
 		return err
 	}
 	s.Validators.BasicValidators()
+	s.Operators.LoadBasicOperations()
 	return nil
 }
 
@@ -97,10 +99,35 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 	return nil, nil
 }
 
+func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op) interface{} {
+	for _, operator := range f.Operators {
+		result := f.PerformOperation(value, operator, allOperations)
+		if result != nil {
+			log.Printf("result of operation: %s is %v", operator, result)
+			value = result
+		}
+	}
+	return value
+}
+
+func (f *Field) PerformOperation(value interface{}, operation string, allOperations map[string]operators.Op) interface{} {
+	customValidator, exists := allOperations[operation]
+	if !exists {
+		return nil
+	}
+	constants := f.Constants["_"+operation].Attributes
+	result := customValidator(value, constants)
+	return *result
+}
+
 func (s *Schematics) MakeFlat(data map[string]interface{}) *map[string]interface{} {
 	var dMap DataMap
 	dMap.FlattenTheMap(data, "", s.Separator)
 	return &dMap.Data
+}
+
+func (s *Schematics) Deflate(data map[string]interface{}) map[string]interface{} {
+	return DeflateMap(data, s.Separator)
 }
 
 func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
@@ -159,4 +186,17 @@ func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErro
 		return &msg
 	}
 	return nil
+}
+
+func (s *Schematics) PerformOperations(data map[string]interface{}) *map[string]interface{} {
+	data = *s.MakeFlat(data)
+	for _, field := range s.Schema.Fields {
+		value, exists := data[field.TargetKey]
+		if exists {
+			data[field.TargetKey] = field.Operate(value, s.Operators.OpFunctions)
+		}
+	}
+	d := s.Deflate(data)
+
+	return &d
 }
