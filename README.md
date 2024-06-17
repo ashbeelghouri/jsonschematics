@@ -247,7 +247,7 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 - LoadSchemaFromFile(path string)                  	    error
 - LoadSchemaFromMap(m *map[string]interface{})              error
 - Validate(data interface{})        		            interface{}
-- Operate(data interface{})	                            *map[string]interface{}
+- Operate(data interface{})	                            interface{}
 ```
 
 ##### Schema
