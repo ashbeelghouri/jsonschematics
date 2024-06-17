@@ -3,6 +3,7 @@ package jsonschematics
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/validators"
 	"log"
@@ -36,41 +37,32 @@ type Constant struct {
 	ErrMsg     string                 `json:"err"`
 }
 
-func LoadFromMap(s *map[string]interface{}) (*Schematics, error) {
-	jsonData, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	var sch Schematics
-	err = json.Unmarshal(jsonData, &sch.Schema)
-	if err != nil {
-		sch.Validators.BasicValidators()
-		sch.Operators.LoadBasicOperations()
-	}
-	return &sch, nil
-}
-
-func LoadFromJsonFile(filePath string) (*Schematics, error) {
-	var s Schematics
-	err := s.LoadSchema(filePath)
-	if err != nil {
-		log.Fatalf("Can not load the schema: %v", err)
-		return nil, err
-	}
-	s.Separator = "."
-	return &s, nil
-}
-
-func (s *Schematics) LoadSchema(filePath string) error {
-	content, err := os.ReadFile(filePath)
+func (s *Schematics) LoadSchemaFromFile(path string) error {
+	content, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Failed to load schema file: %v", err)
 		return err
 	}
 	err = json.Unmarshal(content, &s.Schema)
 	if err != nil {
-		log.Fatalf("Failed to parse the data: %v", err)
+		log.Fatalf("[LoadSchema] Failed to parse the data: %v", err)
+		return err
+	}
+	s.Validators.BasicValidators()
+	s.Operators.LoadBasicOperations()
+	if s.Separator == "" {
+		s.Separator = "."
+	}
+	return nil
+}
+
+func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
+	jsonData, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(jsonData, &s.Schema)
+	if err != nil {
 		return err
 	}
 	s.Validators.BasicValidators()
@@ -119,19 +111,30 @@ func (f *Field) PerformOperation(value interface{}, operation string, allOperati
 	return *result
 }
 
-func (s *Schematics) MakeFlat(data map[string]interface{}) *map[string]interface{} {
+func (s *Schematics) makeFlat(data map[string]interface{}) *map[string]interface{} {
 	var dMap DataMap
 	dMap.FlattenTheMap(data, "", s.Separator)
 	return &dMap.Data
 }
 
-func (s *Schematics) Deflate(data map[string]interface{}) map[string]interface{} {
+func (s *Schematics) deflate(data map[string]interface{}) map[string]interface{} {
 	return DeflateMap(data, s.Separator)
 }
 
-func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
+func (s *Schematics) Validate(data interface{}) interface{} {
+	switch d := data.(type) {
+	case map[string]interface{}:
+		return s.validateSingle(d)
+	case []map[string]interface{}:
+		return s.validateArray(d)
+	default:
+		return nil
+	}
+}
+
+func (s *Schematics) validateSingle(d map[string]interface{}) *ErrorMessages {
 	var errs ErrorMessages
-	data := *s.MakeFlat(d)
+	data := *s.makeFlat(d)
 	for _, field := range s.Schema.Fields {
 		matchingKeys := FindMatchingKeys(data, field.TargetKey)
 		if len(matchingKeys) == 0 {
@@ -154,32 +157,24 @@ func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
 	return nil
 }
 
-func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErrors {
+func (s *Schematics) validateArray(data []map[string]interface{}) *[]ArrayOfErrors {
 	var msg []ArrayOfErrors
+	i := 0
 	for _, d := range data {
+		i = i + 1
 		var dMap DataMap
 		dMap.FlattenTheMap(d, "", s.Separator)
 		arrayId, exists := dMap.Data[s.ArrayIdKey]
-		if exists {
-			errMessages := s.Validate(d)
-			if errMessages != nil {
-				msg = append(msg, ArrayOfErrors{
-					Errors: *errMessages,
-					ID:     arrayId,
-				})
-			}
-		} else {
+		if !exists {
+			arrayId = fmt.Sprintf("row-%d", i)
+			exists = true
+		}
+		log.Println("arrayID", arrayId)
+		errMessages := s.validateSingle(d)
+		if errMessages != nil {
 			msg = append(msg, ArrayOfErrors{
-				Errors: ErrorMessages{
-					Messages: []ErrorMessage{
-						{
-							Message:   "unable to validate the array, ArrayIdKey not defined in schematics",
-							Validator: "ALL",
-							Target:    "ALL",
-						},
-					},
-				},
-				ID: nil,
+				Errors: *errMessages,
+				ID:     arrayId,
 			})
 		}
 	}
@@ -190,22 +185,33 @@ func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErro
 	return nil
 }
 
-func (s *Schematics) PerformOperations(data map[string]interface{}) *map[string]interface{} {
-	data = *s.MakeFlat(data)
+func (s *Schematics) Operate(data interface{}) interface{} {
+	switch d := data.(type) {
+	case map[string]interface{}:
+		return s.performOperationSingle(d)
+	case []map[string]interface{}:
+		return s.performOperationArray(d)
+	default:
+		return nil
+	}
+}
+
+func (s *Schematics) performOperationSingle(data map[string]interface{}) *map[string]interface{} {
+	data = *s.makeFlat(data)
 	for _, field := range s.Schema.Fields {
 		matchingKeys := FindMatchingKeys(data, field.TargetKey)
 		for key, value := range matchingKeys {
 			data[key] = field.Operate(value, s.Operators.OpFunctions)
 		}
 	}
-	d := s.Deflate(data)
+	d := s.deflate(data)
 	return &d
 }
 
-func (s *Schematics) PerformArrOperations(data []map[string]interface{}) *[]map[string]interface{} {
+func (s *Schematics) performOperationArray(data []map[string]interface{}) *[]map[string]interface{} {
 	var obj []map[string]interface{}
 	for _, d := range data {
-		results := s.PerformOperations(d)
+		results := s.performOperationSingle(d)
 		obj = append(obj, *results)
 	}
 	if len(obj) > 0 {

@@ -4,7 +4,7 @@
     "depends_on": [],
     "target_key": "user.addresses.*.tag",
     "description": "",
-    "validators": ["IsString", "IsRequired"],
+    "validators": ["IsString", "IsRequired", "MaxLengthAllowed"],
     "operators": ["Capitalize"],
     "constants": {
       "MaxLengthAllowed": {

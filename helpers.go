@@ -2,6 +2,8 @@ package jsonschematics
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -113,34 +115,66 @@ func stringsInSlice(s []string, slice []string) bool {
 	return false
 }
 
-func GetJsonFileAsMap(path string) (*map[string]interface{}, error) {
-	var data map[string]interface{}
-	content, err := os.ReadFile(path)
-	if err != nil {
-		log.Fatalf("Failed to load schema file: %v", err)
-		return nil, err
+func isJSON(content []byte) (string, error) {
+	var result interface{}
+	if err := json.Unmarshal(content, &result); err != nil {
+		return "", err
 	}
-	err = json.Unmarshal(content, &data)
-	if err != nil {
-		log.Fatalf("Failed to parse the data: %v", err)
-		return nil, err
+
+	switch result.(type) {
+	case map[string]interface{}:
+		return "object", nil
+	case []interface{}:
+		return "array", nil
+	default:
+		return "unknown", fmt.Errorf("content is neither a JSON object nor array")
 	}
-	return &data, nil
 }
 
-func GetJsonFileAsMapArray(path string) (*[]map[string]interface{}, error) {
-	var data []map[string]interface{}
+func GetJson(path string) (interface{}, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("Failed to load schema file: %v", err)
 		return nil, err
 	}
-	err = json.Unmarshal(content, &data)
+	jsonType, err := isJSON(content)
+	switch jsonType {
+	case "object":
+		mapper, err := getJsonFileAsMap(content)
+		if err != nil {
+			return nil, err
+		}
+		return mapper, err
+	case "array":
+		mapper, err := getJsonFileAsMapArray(content)
+		if err != nil {
+			return nil, err
+		}
+		return mapper, err
+	default:
+		return nil, errors.New("unknown json file content found")
+	}
+
+}
+
+func getJsonFileAsMap(content []byte) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	err := json.Unmarshal(content, &data)
 	if err != nil {
-		log.Fatalf("Failed to parse the data: %v", err)
+		log.Fatalf("[GetJsonFileAsMap] Failed to parse the data: %v", err)
 		return nil, err
 	}
-	return &data, nil
+	return data, nil
+}
+
+func getJsonFileAsMapArray(content []byte) ([]map[string]interface{}, error) {
+	var data []map[string]interface{}
+	err := json.Unmarshal(content, &data)
+	if err != nil {
+		log.Fatalf("[GetJsonFileAsMapArray] Failed to parse the data: %v", err)
+		return nil, err
+	}
+	return data, nil
 }
 
 func ConvertKeyToRegex(key string) string {

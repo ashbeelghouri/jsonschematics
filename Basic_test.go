@@ -9,16 +9,17 @@ import (
 
 func TestForObjData(t *testing.T) {
 	fnTimeStart := time.Now()
-	schema, err := LoadFromJsonFile("json/schema.json")
+	var schema Schematics
+	err := schema.LoadSchemaFromFile("json/schema.json")
 	if err != nil {
 		t.Error(err)
 	}
-	data, err := GetJsonFileAsMap("json/data.json")
+	data, err := GetJson("json/data.json")
 	if err != nil {
 		t.Error(err)
 	}
 	start := time.Now()
-	errs := schema.Validate(*data)
+	errs := schema.Validate(data)
 	end := time.Now()
 
 	log.Printf("[SINGLE OBJ] Validation Time: %v", end.Sub(start))
@@ -29,7 +30,7 @@ func TestForObjData(t *testing.T) {
 	}
 
 	start = time.Now()
-	newData := schema.PerformOperations(*data)
+	newData := schema.Operate(data)
 	end = time.Now()
 	log.Printf("[SINGLE OBJ] Operaions Time: %v", end.Sub(start))
 	log.Printf("[SINGLE OBJ] Updated DATA: %v", newData)
@@ -40,32 +41,30 @@ func TestForObjData(t *testing.T) {
 
 func TestForArrayData(t *testing.T) {
 	fnTimeStart := time.Now()
-	schema1, err := LoadFromJsonFile("json/schema.json")
+	var schema1 Schematics
+	err := schema1.LoadSchemaFromFile("json/schema.json")
 	schema1.ArrayIdKey = "user.id"
 	if err != nil {
 		t.Error(err)
 	}
-	data, err := GetJsonFileAsMapArray("json/arr-data.json")
+	data, err := GetJson("json/arr-data.json")
 	if err != nil {
 		t.Error(err)
 	}
 	start := time.Now()
-	errs := schema1.ValidateArray(*data)
+	errs := schema1.Validate(data)
 	end := time.Now()
 
 	log.Printf("[ARRAY OF OBJ] Validation Time: %v", end.Sub(start))
-	if errs != nil && len(*errs) > 0 {
-		for _, j := range *errs {
-			obj, err := json.Marshal(j)
-			if err != nil {
-				log.Fatalf("err: %v", err)
-			}
-			log.Printf("array validations >>>> %v", string(obj))
+	if errs != nil {
+		obj, err := json.Marshal(errs)
+		if err != nil {
+			log.Fatalf("err: %v", err)
 		}
-	}
-	if errs == nil || !(len(*errs) > 0) {
+		log.Printf("array validations >>>> %v", string(obj))
+	} else {
 		start = time.Now()
-		newData := schema1.PerformArrOperations(*data)
+		newData := schema1.Operate(data)
 		end = time.Now()
 		log.Printf("[ARRAY OF OBJ] Operation Time: %v", end.Sub(start))
 		log.Printf("[ARRAY OF OBJ] Updated Data: %v", newData)
@@ -75,34 +74,53 @@ func TestForArrayData(t *testing.T) {
 }
 
 func TestNestedArrays(t *testing.T) {
-	//fnTimeStart := time.Now()
-	schema, err := LoadFromJsonFile("json/arr-inside-obj-schema.json")
+	fnTimeStart := time.Now()
+	var schema Schematics
+	err := schema.LoadSchemaFromFile("json/arr-inside-obj-schema.json")
 	if err != nil {
 		t.Error(err)
 	}
-	data, err := GetJsonFileAsMap("json/arr-inside-obj-data.json")
+	data, err := GetJson("json/arr-inside-obj-data.json")
 	if err != nil {
 		t.Error(err)
 	}
-	flatData := schema.MakeFlat(*data)
-	log.Println("flat data:", flatData)
+	errs := schema.Validate(data)
+	if errs != nil {
+		jsonErrors, err := json.Marshal(errs)
+		if err != nil {
+			log.Fatalf("[TestNestedArrays] err: %v", err)
+		}
+		log.Println("[TestNestedArrays] json errors:", string(jsonErrors))
+	}
 
-	deflated := schema.Deflate(*flatData)
-	log.Println("________________________")
-	log.Println("deflated data: ", deflated)
-	log.Println("________________________")
+	newData := schema.Operate(data)
+	log.Println("[TestNestedArrays] after operations:", newData)
+	log.Println("[TestNestedArrays] total time taken:", time.Now().Sub(fnTimeStart))
+}
 
-	errs := schema.Validate(*data)
+func TestDeepValidationInArray(t *testing.T) {
+	fnTimeStart := time.Now()
+	var schema Schematics
+	err := schema.LoadSchemaFromFile("json/arr-inside-obj-schema.json")
+	if err != nil {
+		log.Println("[TestDeepValidationInArray] unable to load the schema from json file: ", err)
+		t.Error(err)
+	}
+	data, err := GetJson("json/arr-inside-arr-obj-data.json")
+	if err != nil {
+		log.Println("[TestDeepValidationInArray] unable to load the data from json file: ", err)
+		t.Error(err)
+	}
+	errs := schema.Validate(data)
 
 	if errs != nil {
 		jsonErrors, err := json.Marshal(errs)
 		if err != nil {
-			log.Fatalf("err: %v", err)
+			log.Fatalf("[TestDeepValidationInArray] err: %v", err)
 		}
-		log.Println("json errors:", string(jsonErrors))
+		log.Println("[TestDeepValidationInArray] json errors:", string(jsonErrors))
 	}
-
-	newData := schema.PerformOperations(*data)
-	log.Println("after operations:", newData)
-
+	newData := schema.Operate(data)
+	log.Println("[TestDeepValidationInArray] after operations:", newData)
+	log.Println("[TestDeepValidationInArray] total time taken:", time.Now().Sub(fnTimeStart))
 }
