@@ -157,10 +157,11 @@ func (s *Schematics) validateSingle(d map[string]interface{}) *ErrorMessages {
 	return nil
 }
 
-func (s *Schematics) validateArray(data []map[string]interface{}) *[]ArrayOfErrors {
-	var msg []ArrayOfErrors
+func (s *Schematics) validateArray(data []map[string]interface{}) *ErrorMessages {
+	var errs ErrorMessages
 	i := 0
 	for _, d := range data {
+		var errorMessages *ErrorMessages
 		i = i + 1
 		var dMap DataMap
 		dMap.FlattenTheMap(d, "", s.Separator)
@@ -170,17 +171,16 @@ func (s *Schematics) validateArray(data []map[string]interface{}) *[]ArrayOfErro
 			exists = true
 		}
 		log.Println("arrayID", arrayId)
-		errMessages := s.validateSingle(d)
-		if errMessages != nil {
-			msg = append(msg, ArrayOfErrors{
-				Errors: *errMessages,
-				ID:     arrayId,
-			})
+		errorMessages = s.validateSingle(d)
+		if errorMessages != nil {
+			for _, msg := range errorMessages.Messages {
+				errs.AddErrorsForArray(msg.Validator, msg.Target, msg.Message, msg.Value, arrayId)
+			}
 		}
 	}
 
-	if len(msg) > 0 {
-		return &msg
+	if len(errs.Messages) > 0 {
+		return &errs
 	}
 	return nil
 }
