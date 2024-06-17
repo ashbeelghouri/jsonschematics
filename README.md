@@ -240,12 +240,12 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 ```golang
 - Schema                                       		    Schema
 - Validators                                   		    validators.Validators
-- Operators				       		                    operators.Operators
+- Operators				       		    operators.Operators
 - Prefix                                       		    string
 - Separator                                    		    string
 - ArrayIdKey                                   		    string
 - LoadSchemaFromFile(path string)                  	    error
-- LoadSchemaFromMap(m *map[string]interface{})          error
+- LoadSchemaFromMap(m *map[string]interface{})              error
 - Validate(data interface{})        		            interface{}
 - Operate(data interface{})	                            *map[string]interface{}
 ```
