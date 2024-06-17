@@ -230,9 +230,10 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 
 ## API Reference
 
-### Example Files
+### Example JSON Files
 - [Schema](https://github.com/ashbeelghouri/jsonschematics/blob/master/json/schema.json)
 - [Data](https://github.com/ashbeelghouri/jsonschematics/blob/master/json/data.json)
+For more examples, Please visit the JSON folder that is included in the repository.
 
 ### Structs
 
@@ -293,15 +294,8 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 ```
 
 #### Errors
-- ArrayOfErrors
 - ErrorMessages
 - ErrorMessage
-
-##### ArrayOfErrors
-```golang
-- Errors ErrorMessages
-- ID     interface{}
-```
 
 ##### ErrorMessages
 ```golang
@@ -316,14 +310,16 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 - Validator string
 - Target    string
 - Value     string
+- ID        string
 ```
 
 ###### >Explanation
 ```sh
-* Here Message contains the error message
+* Validate Function will always return ErrorMessages
 * Validator is the function that have validated the value
 * Target is the key on which validation have been performed
 * Value is the Target's value.
+* ID is the target array key value to identify the validators inside the array, it is very important to define the arrayKeyID, so we can identify which row of an array have the validation issues.
 ```
 
 #### Go Version
