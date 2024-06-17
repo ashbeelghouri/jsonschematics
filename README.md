@@ -234,7 +234,9 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 - [Schema](https://github.com/ashbeelghouri/jsonschematics/blob/master/json/schema.json)
 - [Data](https://github.com/ashbeelghouri/jsonschematics/blob/master/json/data.json)
   
-```For more examples, Please visit the json folder that is included in the repository and review the Test_Basic.go to see the usage```
+```sh
+For more examples, Please visit the json folder that is included in the repository and review the Test_Basic.go to see the usage
+```
 
 ### Structs
 
