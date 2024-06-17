@@ -63,7 +63,8 @@ import (
 )
 
 func main() {
-    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+	var schematics jsonschematics.Schematics
+    err := jsonschematics.LoadSchemaFromFile("path-to-your-schema.json")
     if err != nil {
         fmt.Println("Unable to load the schema:", err)
     }else {
@@ -86,11 +87,12 @@ import (
 )
 
 func main() {
+	var schematics jsonschematics.Schematics
     schema := map[string]interface{}{
         ... define your schema
     }
 
-    schematics, err := jsonschematics.LoadFromMap(&schema)
+    err := jsonschematics.LoadSchemaFromMap(&schema)
     if err != nil {
         fmt.Println("Unable to load the schema:", err)
     }else {
@@ -112,11 +114,12 @@ import (
 )
 
 func main() {
-    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+	var schematics jsonschematics.Schematics
+    err := schematics.LoadSchemaFromFile("path-to-your-schema.json")
     if err != nil {
         fmt.Println("Unable to load the schema:", err)
     }
-    schema.Validators.RegisterValidator("StringIsInsideArr", StringInArr)
+	schematics.Validators.RegisterValidator("StringIsInsideArr", StringInArr)
 }
 
 func StringInArr(i interface{}, attr map[string]interface{}) error {
@@ -148,11 +151,12 @@ import (
 )
 
 func main() {
-    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+	var schematics jsonschematics.Schematics
+	err := schematics.LoadSchemaFromFile("path-to-your-schema.json")
     if err != nil {
         fmt.Println("Unable to load the schema:", err)
     }
-    schema.Validators.RegisterValidator("StringIsInsideArr", func(i interface{}, attr map[string]interface{}) error {
+	schematics.Validators.RegisterValidator("StringIsInsideArr", func(i interface{}, attr map[string]interface{}) error {
     	str := i.(string)
     	strArr := attr["arr"].([]string)
     	found := false
@@ -193,7 +197,7 @@ func main() {
         "Age":  30,
     }
 
-    newData := schema.PerformOperations(data)
+    newData := schema.Operate(data)
     fmt.Printf("Data after Operations: %v", newData)
 }
 ```
@@ -209,11 +213,12 @@ import (
 )
 
 func main() {
-    schematics, err := jsonschematics.LoadFromJsonFile("path-to-your-schema.json")
+	var schematics jsonschematics.Schematics
+	err := schematics.LoadSchemaFromFile("path-to-your-schema.json")
     if err != nil {
         fmt.Println("Unable to load the schema:", err)
     }
-    schema.Operators.RegisterOperation("CapitalizeString", Capitalize)
+	schematics.Operators.RegisterOperation("CapitalizeString", Capitalize)
 }
 
 func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
@@ -233,18 +238,16 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 
 #### Schematics
 ```golang
-- Schema                                       		Schema
-- Validators                                   		validators.Validators
-- Operators				       		operators.Operators
-- Prefix                                       		string
-- Separator                                    		string
-- ArrayIdKey                                   		string
-- LoadSchema(filePath string)                  		error
-- Validate(data map[string]interface{})        		*ErrorMessages
-- ValidateArray(data []map[string]interface{}) 		*[]ArrayOfErrors
-- PerformOperations(data map[string]interface{})	*map[string]interface{}
-- PerformArrOperations(data []map[string]interface{})	*[]map[string]interface{}
-- MakeFlat(data map[string]interface)          		*map[string]interface{}
+- Schema                                       		    Schema
+- Validators                                   		    validators.Validators
+- Operators				       		    operators.Operators
+- Prefix                                       		    string
+- Separator                                    		    string
+- ArrayIdKey                                   		    string
+- LoadSchemaFromFile(path string)                  	    error
+- LoadSchemaFromMap(m *map[string]interface{})              error
+- Validate(data interface{})        		            interface{}
+- Operate(data interface{})	                            interface{}
 ```
 
 ##### Schema
@@ -312,6 +315,15 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 - Message   string
 - Validator string
 - Target    string
+- Value     string
+```
+
+###### >Explanation
+```sh
+* Here Message contains the error message
+* Validator is the function that have validated the value
+* Target is the key on which validation have been performed
+* Value is the Target's value.
 ```
 
 #### Go Version

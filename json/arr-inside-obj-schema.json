@@ -1,0 +1,32 @@
+{
+  "version": "1",
+  "fields": [{
+    "depends_on": [],
+    "target_key": "user.addresses.*.tag",
+    "description": "",
+    "validators": ["IsString", "IsRequired", "MaxLengthAllowed"],
+    "operators": ["Capitalize"],
+    "constants": {
+      "MaxLengthAllowed": {
+        "attributes": {
+          "max": 3
+        },
+        "err": "this users address tag have length greater than 2 characters"
+      }
+    }
+  }, {
+    "depends_on": [],
+    "target_key": "user.addresses.*.location.*.city",
+    "description": "",
+    "validators": ["IsString", "IsRequired"],
+    "operators": ["Capitalize"],
+    "constants": {
+      "MaxLengthAllowed": {
+        "attributes": {
+          "max": 3
+        },
+        "err": "this location's city have more than 3 characters"
+      }
+    }
+  }]
+}
