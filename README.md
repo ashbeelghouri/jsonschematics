@@ -312,6 +312,15 @@ func Capitalize(i interface{}, attributes map[string]interface{}) *interface{} {
 - Message   string
 - Validator string
 - Target    string
+- Value     string
+```
+
+###### >Explanation
+```sh
+* Here Message contains the error message
+* Validator is the function that have validated the value
+* Target is the key on which validation have been performed
+* Value is the Target's value.
 ```
 
 #### Go Version
