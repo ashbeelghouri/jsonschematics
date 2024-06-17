@@ -133,16 +133,18 @@ func (s *Schematics) Validate(d map[string]interface{}) *ErrorMessages {
 	var errs ErrorMessages
 	data := *s.MakeFlat(d)
 	for _, field := range s.Schema.Fields {
-		value, exists := data[field.TargetKey]
-		if !exists {
-			if stringsInSlice([]string{"MustHave", "Exist", "Required", "IsRequired"}, field.Validators) {
-				errs.AddError("IsRequired", "field.TargetKey", "is required")
+		matchingKeys := FindMatchingKeys(data, field.TargetKey)
+		if len(matchingKeys) == 0 {
+			if stringsInSlice(field.Validators, []string{"MustHave", "Exist", "Required", "IsRequired"}) {
+				errs.AddError("IsRequired", field.TargetKey, "is required", "")
 			}
 			continue
 		} else {
-			validator, err := field.Validate(value, s.Validators.ValidationFns)
-			if err != nil {
-				errs.AddError(*validator, field.TargetKey, err.Error())
+			for key, value := range matchingKeys {
+				validator, err := field.Validate(value, s.Validators.ValidationFns)
+				if err != nil {
+					errs.AddError(*validator, key, err.Error(), value)
+				}
 			}
 		}
 	}
@@ -191,13 +193,12 @@ func (s *Schematics) ValidateArray(data []map[string]interface{}) *[]ArrayOfErro
 func (s *Schematics) PerformOperations(data map[string]interface{}) *map[string]interface{} {
 	data = *s.MakeFlat(data)
 	for _, field := range s.Schema.Fields {
-		value, exists := data[field.TargetKey]
-		if exists {
-			data[field.TargetKey] = field.Operate(value, s.Operators.OpFunctions)
+		matchingKeys := FindMatchingKeys(data, field.TargetKey)
+		for key, value := range matchingKeys {
+			data[key] = field.Operate(value, s.Operators.OpFunctions)
 		}
 	}
 	d := s.Deflate(data)
-
 	return &d
 }
 

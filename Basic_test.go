@@ -73,3 +73,36 @@ func TestForArrayData(t *testing.T) {
 	log.Printf("[ARRAY OF OBJ] total time taken: %v", time.Now().Sub(fnTimeStart))
 	log.Println("-------------------------------------------")
 }
+
+func TestNestedArrays(t *testing.T) {
+	//fnTimeStart := time.Now()
+	schema, err := LoadFromJsonFile("json/arr-inside-obj-schema.json")
+	if err != nil {
+		t.Error(err)
+	}
+	data, err := GetJsonFileAsMap("json/arr-inside-obj-data.json")
+	if err != nil {
+		t.Error(err)
+	}
+	flatData := schema.MakeFlat(*data)
+	log.Println("flat data:", flatData)
+
+	deflated := schema.Deflate(*flatData)
+	log.Println("________________________")
+	log.Println("deflated data: ", deflated)
+	log.Println("________________________")
+
+	errs := schema.Validate(*data)
+
+	if errs != nil {
+		jsonErrors, err := json.Marshal(errs)
+		if err != nil {
+			log.Fatalf("err: %v", err)
+		}
+		log.Println("json errors:", string(jsonErrors))
+	}
+
+	newData := schema.PerformOperations(*data)
+	log.Println("after operations:", newData)
+
+}
