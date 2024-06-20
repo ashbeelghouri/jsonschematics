@@ -221,7 +221,7 @@ func FormatError(id *string, message string, target string, validator string, va
 	errorMessage = strings.Replace(errorMessage, "%target", target, -1)
 	errorMessage = strings.Replace(errorMessage, "%validator", validator, -1)
 	if id != nil {
-		value = fmt.Sprintf("[%s]:%s", id, value)
+		value = fmt.Sprintf("[%s]:%s", *id, value)
 	}
 	errorMessage = strings.Replace(errorMessage, "%value", value, -1)
 	return errorMessage

@@ -23,7 +23,7 @@ func TestForObjData(t *testing.T) {
 	end := time.Now()
 
 	log.Printf("[SINGLE OBJ] Validation Time: %v", end.Sub(start))
-
+	log.Print("[SINGLE OBJ] have single errors: ", errs.HaveSingleError("", ""))
 	errorsFromValidate, err := json.Marshal(errs)
 	if err != nil {
 		log.Fatalf("err: %v", err)
