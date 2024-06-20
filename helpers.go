@@ -197,3 +197,21 @@ func FindMatchingKeys(data map[string]interface{}, keyPattern string) map[string
 	}
 	return matchingKeys
 }
+
+func StringLikePatterns(str string, keyPatterns []string) bool {
+	for _, pattern := range keyPatterns {
+		re := regexp.MustCompile(ConvertKeyToRegex(pattern))
+		if re.MatchString(str) {
+			return true
+		}
+	}
+	return false
+}
+
+func GetConstantMapKeys(mapper map[string]Constant) []string {
+	keys := make([]string, 0, len(mapper))
+	for k := range mapper {
+		keys = append(keys, k)
+	}
+	return keys
+}

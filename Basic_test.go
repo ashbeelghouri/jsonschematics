@@ -24,11 +24,11 @@ func TestForObjData(t *testing.T) {
 
 	log.Printf("[SINGLE OBJ] Validation Time: %v", end.Sub(start))
 
-	_, err = json.Marshal(errs)
+	errorsFromValidate, err := json.Marshal(errs)
 	if err != nil {
 		log.Fatalf("err: %v", err)
 	}
-
+	log.Println("[SINGLE OBJ] errorsFromValidate: ", string(errorsFromValidate))
 	start = time.Now()
 	newData := schema.Operate(data)
 	end = time.Now()
