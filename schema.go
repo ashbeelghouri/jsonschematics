@@ -119,7 +119,7 @@ func (s *Schematics) deflate(data map[string]interface{}) map[string]interface{}
 	return DeflateMap(data, s.Separator)
 }
 
-func (s *Schematics) Validate(data interface{}) interface{} {
+func (s *Schematics) Validate(data interface{}) *ErrorMessages {
 	switch d := data.(type) {
 	case map[string]interface{}:
 		return s.validateSingle(d)

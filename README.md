@@ -244,13 +244,13 @@ For more examples, Please visit the json folder that is included in the reposito
 ```golang
 - Schema                                       		    Schema
 - Validators                                   		    validators.Validators
-- Operators				       		    operators.Operators
+- Operators				       		                    operators.Operators
 - Prefix                                       		    string
 - Separator                                    		    string
 - ArrayIdKey                                   		    string
 - LoadSchemaFromFile(path string)                  	    error
-- LoadSchemaFromMap(m *map[string]interface{})              error
-- Validate(data interface{})        		            interface{}
+- LoadSchemaFromMap(m *map[string]interface{})          error
+- Validate(data interface{})        		            *ErrorMessages
 - Operate(data interface{})	                            interface{}
 ```
 
@@ -268,12 +268,11 @@ For more examples, Please visit the json folder that is included in the reposito
 
 ##### Field
 ```golang
-- DependsOn   []string 			`json:"depends_on"`
-- TargetKey   string 			`json:"target_key"`
-- Description string 			`json:"description"`
-- Validators  []string 			`json:"validators"`
-- Constants   map[string]interface{} 	`json:"constants"`
-- Operators   []string            	`json:"operators"`
+- DependsOn   []string 			    `json:"depends_on"`
+- TargetKey   string 			    `json:"target_key"`
+- Description string 			    `json:"description"`
+- Validators  map[string]Constant 	`json:"validators"`
+- Operators   map[string]Constant   `json:"operators"`
 ```
 
 ###### >Explanation
@@ -281,8 +280,8 @@ For more examples, Please visit the json folder that is included in the reposito
 * DependsOn will check if the keys in array exists in data
 * TargetKey will target the value in the data throught the key
 * Description can have anything to explain the data, this can also be empty
-* Validators is an array of string "validation functions"
-* Constants will have dynanmic constants for each validator
+* Validators is an array map of validators where name is the function name and values contains attributes which is passed along to the function with value.
+* Operators is an array map of Operators where name is the function name and values contains attributes which is passed along to the function with value.
 ```
 
 ##### Constant
@@ -305,6 +304,7 @@ For more examples, Please visit the json folder that is included in the reposito
 - Messages                                                 []ErrorMessage
 - AddError(validator string, target string, err string)
 - HaveErrors()                                             bool
+- HaveSingleError(format string)                           error
 ```
 
 ##### ErrorMessage
@@ -315,6 +315,13 @@ For more examples, Please visit the json folder that is included in the reposito
 - Value     string
 - ID        string
 ```
+
+If you want to get the single Error, you can define the error format like below:
+"validation error %message for %target on validating with %validator, provided: %value"
+- %validator: this is the name of the validator
+- %message: this is the main error message
+- %target: this is the target key of the error message
+- %value: this is the value on which validation has been performed.
 
 ###### >Explanation
 ```sh
