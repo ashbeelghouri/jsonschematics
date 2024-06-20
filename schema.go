@@ -27,14 +27,13 @@ type Field struct {
 	DependsOn   []string            `json:"depends_on"`
 	TargetKey   string              `json:"target_key"`
 	Description string              `json:"description"`
-	Validators  []string            `json:"validators"`
-	Constants   map[string]Constant `json:"constants"`
-	Operators   []string            `json:"operators"`
+	Validators  map[string]Constant `json:"validators"`
+	Operators   map[string]Constant `json:"operators"`
 }
 
 type Constant struct {
 	Attributes map[string]interface{} `json:"attributes"`
-	ErrMsg     string                 `json:"err"`
+	ErrMsg     string                 `json:"error"`
 }
 
 func (s *Schematics) LoadSchemaFromFile(path string) error {
@@ -71,29 +70,29 @@ func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
 }
 
 func (f *Field) Validate(value interface{}, allValidators map[string]validators.Validator) (*string, error) {
-	for _, validator := range f.Validators {
-		if stringExists(validator, []string{"Exist", "Required", "IsRequired"}) {
+	for name, constants := range f.Validators {
+		log.Println("name of the validator is:", name)
+		if stringExists(name, []string{"Exist", "Required", "IsRequired"}) {
 			continue
 		}
-		if customValidator, exists := allValidators[validator]; exists {
-			if err := customValidator(value, f.Constants[validator].Attributes); err != nil {
-				if f.Constants[validator].ErrMsg != "" {
+		if customValidator, exists := allValidators[name]; exists {
+			if err := customValidator(value, constants.Attributes); err != nil {
+				if constants.ErrMsg != "" {
 					log.Printf("Validation Error: %v", err)
-					return &validator, errors.New(f.Constants[validator].ErrMsg)
-				} else {
-					return &validator, err
+					return nil, errors.New(constants.ErrMsg)
 				}
+				return &name, err
 			}
 		} else {
-			return &validator, errors.New("validator not registered")
+			return &name, errors.New("validator not registered")
 		}
 	}
 	return nil, nil
 }
 
 func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op) interface{} {
-	for _, operator := range f.Operators {
-		result := f.PerformOperation(value, operator, allOperations)
+	for operationName, operationConstants := range f.Operators {
+		result := f.PerformOperation(value, operationName, allOperations, operationConstants)
 		if result != nil {
 			value = result
 		}
@@ -101,13 +100,12 @@ func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op
 	return value
 }
 
-func (f *Field) PerformOperation(value interface{}, operation string, allOperations map[string]operators.Op) interface{} {
+func (f *Field) PerformOperation(value interface{}, operation string, allOperations map[string]operators.Op, constants Constant) interface{} {
 	customValidator, exists := allOperations[operation]
 	if !exists {
 		return nil
 	}
-	constants := f.Constants["_"+operation].Attributes
-	result := customValidator(value, constants)
+	result := customValidator(value, constants.Attributes)
 	return *result
 }
 
@@ -134,18 +132,31 @@ func (s *Schematics) Validate(data interface{}) interface{} {
 
 func (s *Schematics) validateSingle(d map[string]interface{}) *ErrorMessages {
 	var errs ErrorMessages
+	var missingFromDependants []string
 	data := *s.makeFlat(d)
 	for _, field := range s.Schema.Fields {
+		allKeys := GetConstantMapKeys(field.Validators)
 		matchingKeys := FindMatchingKeys(data, field.TargetKey)
 		if len(matchingKeys) == 0 {
-			if stringsInSlice(field.Validators, []string{"MustHave", "Exist", "Required", "IsRequired"}) {
+			if stringsInSlice(allKeys, []string{"MustHave", "Exist", "Required", "IsRequired"}) {
 				errs.AddError("IsRequired", field.TargetKey, "is required", "")
 			}
 			continue
+		} else if len(field.DependsOn) > 0 {
+			for _, d := range field.DependsOn {
+				matchDependsOn := FindMatchingKeys(data, d)
+				if len(matchDependsOn) < 1 || StringLikePatterns(d, missingFromDependants) {
+					errs.AddError("Depends On", field.TargetKey, "this value depends on other values which do not exists", d)
+					missingFromDependants = append(missingFromDependants, field.TargetKey)
+					break
+				}
+			}
+
 		} else {
 			for key, value := range matchingKeys {
 				validator, err := field.Validate(value, s.Validators.ValidationFns)
 				if err != nil {
+					log.Println("validator error:", err)
 					errs.AddError(*validator, key, err.Error(), value)
 				}
 			}
