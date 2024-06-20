@@ -70,7 +70,13 @@ func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
 }
 
 func (f *Field) Validate(value interface{}, allValidators map[string]validators.Validator) (*string, error) {
+	nameOfValidator := "unknown"
+
 	for name, constants := range f.Validators {
+		if name != "" {
+			nameOfValidator = name
+		}
+
 		log.Println("name of the validator is:", name)
 		if stringExists(name, []string{"Exist", "Required", "IsRequired"}) {
 			continue
@@ -79,15 +85,15 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 			if err := customValidator(value, constants.Attributes); err != nil {
 				if constants.ErrMsg != "" {
 					log.Printf("Validation Error: %v", err)
-					return nil, errors.New(constants.ErrMsg)
+					return &nameOfValidator, errors.New(constants.ErrMsg)
 				}
-				return &name, err
+				return &nameOfValidator, err
 			}
 		} else {
-			return &name, errors.New("validator not registered")
+			return &nameOfValidator, errors.New("validator not registered")
 		}
 	}
-	return nil, nil
+	return &nameOfValidator, nil
 }
 
 func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op) interface{} {
@@ -119,7 +125,7 @@ func (s *Schematics) deflate(data map[string]interface{}) map[string]interface{}
 	return DeflateMap(data, s.Separator)
 }
 
-func (s *Schematics) Validate(data interface{}) interface{} {
+func (s *Schematics) Validate(data interface{}) *ErrorMessages {
 	switch d := data.(type) {
 	case map[string]interface{}:
 		return s.validateSingle(d)
@@ -157,7 +163,10 @@ func (s *Schematics) validateSingle(d map[string]interface{}) *ErrorMessages {
 				validator, err := field.Validate(value, s.Validators.ValidationFns)
 				if err != nil {
 					log.Println("validator error:", err)
-					errs.AddError(*validator, key, err.Error(), value)
+					if validator != nil {
+						errs.AddError(*validator, key, err.Error(), value)
+					}
+
 				}
 			}
 		}

@@ -215,3 +215,14 @@ func GetConstantMapKeys(mapper map[string]Constant) []string {
 	}
 	return keys
 }
+
+func FormatError(id *string, message string, target string, validator string, value string, format string) string {
+	errorMessage := strings.Replace(format, "%message", message, -1)
+	errorMessage = strings.Replace(errorMessage, "%target", target, -1)
+	errorMessage = strings.Replace(errorMessage, "%validator", validator, -1)
+	if id != nil {
+		value = fmt.Sprintf("[%s]:%s", *id, value)
+	}
+	errorMessage = strings.Replace(errorMessage, "%value", value, -1)
+	return errorMessage
+}
