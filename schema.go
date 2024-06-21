@@ -42,11 +42,8 @@ func (s *Schematics) LoadSchemaFromFile(path string) error {
 		log.Fatalf("Failed to load schema file: %v", err)
 		return err
 	}
-	err = json.Unmarshal(content, &s.Schema)
-	if err != nil {
-		log.Fatalf("[LoadSchema] Failed to parse the data: %v", err)
-		return err
-	}
+	schema, err := HandleSchemaVersions(content)
+	s.Schema = *schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
 	if s.Separator == "" {
@@ -58,9 +55,10 @@ func (s *Schematics) LoadSchemaFromFile(path string) error {
 func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
 	jsonData, err := json.Marshal(m)
 	if err != nil {
-		return err
+		return nil
 	}
-	err = json.Unmarshal(jsonData, &s.Schema)
+	schema, err := HandleSchemaVersions(jsonData)
+	s.Schema = *schema
 	if err != nil {
 		return err
 	}
