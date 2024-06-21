@@ -124,3 +124,16 @@ func TestDeepValidationInArray(t *testing.T) {
 	log.Println("[TestDeepValidationInArray] after operations:", newData)
 	log.Println("[TestDeepValidationInArray] total time taken:", time.Now().Sub(fnTimeStart))
 }
+
+func TestSchemaVersioning(t *testing.T) {
+	fnTimeStart := time.Now()
+	var schema Schematics
+	err := schema.LoadSchemaFromFile("json/schema-v1.1.json")
+	if err != nil {
+		log.Println("[TestSchemaVersioning] unable to load the schema from json file: ", err)
+		t.Error(err)
+	}
+	log.Println("Schema Version 1.1", schema)
+
+	log.Println("[TestDeepValidationInArray] total time taken:", time.Now().Sub(fnTimeStart))
+}

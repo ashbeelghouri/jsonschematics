@@ -16,6 +16,34 @@ type DataMap struct {
 	Data map[string]interface{}
 }
 
+var basicSchemaVersions = []string{
+	"1",
+	"1.0",
+}
+
+type BaseSchemaInfo struct {
+	Version string
+}
+
+type Schema1o1 struct {
+	Version string
+	Fields  []Field1o1
+}
+
+type Field1o1 struct {
+	DependsOn   []string       `json:"depends_on"`
+	TargetKey   string         `json:"target_key"`
+	Description string         `json:"description"`
+	Validators  []ValidOptn1o1 `json:"validators"`
+	Operators   []ValidOptn1o1 `json:"operators"`
+}
+
+type ValidOptn1o1 struct {
+	Name string                 `json:"name"`
+	Attr map[string]interface{} `json:"attributes"`
+	Err  string                 `json:"error"`
+}
+
 func (d *DataMap) FlattenTheMap(data map[string]interface{}, prefix string, separator string) {
 	if d.Data == nil {
 		d.Data = make(map[string]interface{})
@@ -225,4 +253,62 @@ func FormatError(id *string, message string, target string, validator string, va
 	}
 	errorMessage = strings.Replace(errorMessage, "%value", value, -1)
 	return errorMessage
+}
+
+func HandleSchemaVersions(schemaBytes []byte) (*Schema, error) {
+	var schemaMap BaseSchemaInfo
+	err := json.Unmarshal(schemaBytes, &schemaMap)
+	if err != nil {
+		return nil, err
+	}
+	if stringExists(schemaMap.Version, basicSchemaVersions) {
+		var schema Schema
+		err = json.Unmarshal(schemaBytes, &schema)
+		if err != nil {
+			return nil, err
+		}
+		return &schema, nil
+	}
+	switch schemaMap.Version {
+	case "1.1":
+		schema, err := translateSchema1o1(schemaBytes)
+		if err != nil {
+			return nil, err
+		}
+		return schema, nil
+	}
+
+	return nil, errors.New("unable to handle the schema")
+}
+
+func translateSchema1o1(schemaMap []byte) (*Schema, error) {
+	var schema1o1 Schema1o1
+	err := json.Unmarshal(schemaMap, &schema1o1)
+	if err != nil {
+		return nil, err
+	}
+
+	var baseSchema Schema
+
+	var fields []Field
+
+	for _, f := range schema1o1.Fields {
+		fd := Field{
+			DependsOn:   f.DependsOn,
+			TargetKey:   f.TargetKey,
+			Description: f.Description,
+		}
+
+		validators := make(map[string]Constant)
+		for _, validator := range f.Validators {
+			validators[validator.Name] = Constant{
+				Attributes: validator.Attr,
+				ErrMsg:     validator.Err,
+			}
+		}
+		fd.Validators = validators
+		fields = append(fields, fd)
+	}
+	baseSchema.Fields = fields
+	return &baseSchema, nil
 }
