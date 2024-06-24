@@ -49,4 +49,8 @@ func (v *Validators) BasicValidators() {
 	v.RegisterValidator("IsBefore", IsBefore)
 	v.RegisterValidator("IsAfter", IsAfter)
 	v.RegisterValidator("IsInBetweenTime", IsInBetweenTime)
+
+	//Arrays
+	v.RegisterValidator("ArrayLengthMax", ArrayLengthMax)
+	v.RegisterValidator("ArrayLengthMin", ArrayLengthMin)
 }

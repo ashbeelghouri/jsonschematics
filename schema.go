@@ -16,6 +16,7 @@ type Schematics struct {
 	Operators  operators.Operators
 	Separator  string
 	ArrayIdKey string
+	Locale     string
 }
 
 type Schema struct {
@@ -24,16 +25,19 @@ type Schema struct {
 }
 
 type Field struct {
-	DependsOn   []string            `json:"depends_on"`
-	TargetKey   string              `json:"target_key"`
-	Description string              `json:"description"`
-	Validators  map[string]Constant `json:"validators"`
-	Operators   map[string]Constant `json:"operators"`
+	DependsOn   []string               `json:"depends_on"`
+	Name        string                 `json:"name"`
+	TargetKey   string                 `json:"target_key"`
+	Description string                 `json:"description"`
+	Validators  map[string]Constant    `json:"validators"`
+	Operators   map[string]Constant    `json:"operators"`
+	L10n        map[string]interface{} `json:"l10n"`
 }
 
 type Constant struct {
 	Attributes map[string]interface{} `json:"attributes"`
 	ErrMsg     string                 `json:"error"`
+	L10n       map[string]interface{} `json:"l10n"`
 }
 
 func (s *Schematics) LoadSchemaFromFile(path string) error {
@@ -49,6 +53,11 @@ func (s *Schematics) LoadSchemaFromFile(path string) error {
 	if s.Separator == "" {
 		s.Separator = "."
 	}
+
+	if s.Locale == "" {
+		s.Locale = "en"
+	}
+
 	return nil
 }
 
@@ -64,12 +73,17 @@ func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
 	}
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
+	if s.Separator == "" {
+		s.Separator = "."
+	}
+	if s.Locale == "" {
+		s.Locale = "en"
+	}
 	return nil
 }
 
-func (f *Field) Validate(value interface{}, allValidators map[string]validators.Validator) (*string, error) {
+func (f *Field) Validate(value interface{}, allValidators map[string]validators.Validator, locale *string) (*string, error) {
 	nameOfValidator := "unknown"
-
 	for name, constants := range f.Validators {
 		if name != "" {
 			nameOfValidator = name
@@ -83,7 +97,16 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 			if err := customValidator(value, constants.Attributes); err != nil {
 				if constants.ErrMsg != "" {
 					log.Printf("Validation Error: %v", err)
-					return &nameOfValidator, errors.New(constants.ErrMsg)
+					var localeError = constants.ErrMsg
+					if locale != nil && *locale != "" && *locale != "en" {
+						_, ok := f.L10n[*locale].(string)
+						if !ok {
+							localeError = constants.ErrMsg
+						} else {
+							localeError = f.L10n[*locale].(string)
+						}
+					}
+					return &nameOfValidator, errors.New(localeError)
 				}
 				return &nameOfValidator, err
 			}
@@ -158,13 +181,22 @@ func (s *Schematics) validateSingle(d map[string]interface{}) *ErrorMessages {
 
 		} else {
 			for key, value := range matchingKeys {
-				validator, err := field.Validate(value, s.Validators.ValidationFns)
+				validator, err := field.Validate(value, s.Validators.ValidationFns, &s.Locale)
 				if err != nil {
 					log.Println("validator error:", err)
-					if validator != nil {
-						errs.AddError(*validator, key, err.Error(), value)
+					var fieldName = key
+					if s.Locale != "" && s.Locale != "en" {
+						fieldNameLocales, ok := field.L10n["name"].(map[string]interface{})
+						if ok {
+							_, ok = fieldNameLocales[s.Locale].(string)
+							if ok {
+								fieldName = fieldNameLocales[s.Locale].(string)
+							}
+						}
 					}
-
+					if validator != nil {
+						errs.AddError(*validator, fieldName, err.Error(), value)
+					}
 				}
 			}
 		}

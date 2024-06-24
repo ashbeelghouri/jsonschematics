@@ -1,6 +1,8 @@
 {
   "version": "1.1",
   "fields": [{
+    "name": "",
+    "display_name": "",
     "depends_on": [],
     "target_key": "user.profile.name.first",
     "description": "",
@@ -13,11 +15,21 @@
       "attributes": {
         "max": 20
       },
-      "error": "user's first name should have maximum 20 characters"
+      "error": "user's first name should have maximum 20 characters",
+      "l10n": {
+        "ar": "سي شسيشسشسيش شسيشس شسيضصثضصث قفلربل ٦ع لبلا ثفق"
+      }
     }],
     "operators": [{
       "name": "Capitalize"
-    }]
+    }],
+    "l10n": {
+      "description": {
+        "locale": {
+          "ar": ""
+        }
+      }
+    }
   }, {
     "depends_on": [],
     "target_key": "user.profile.name.last",
