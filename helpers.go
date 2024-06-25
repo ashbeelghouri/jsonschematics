@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"regexp"
@@ -159,10 +158,26 @@ func isJSON(content []byte) (string, error) {
 	}
 }
 
+func canConvert(content []byte) (string, interface{}) {
+	var arr []map[string]interface{}
+	var obj map[string]interface{}
+	const IsArray = "array"
+	const IsObject = "object"
+
+	if err := json.Unmarshal(content, &arr); err == nil {
+		return IsArray, arr
+	}
+
+	if err := json.Unmarshal(content, &obj); err == nil {
+		return IsObject, obj
+	}
+	return "bad-format", nil
+}
+
 func GetJson(path string) (interface{}, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Failed to load schema file: %v", err)
+		logs.ERROR("Failed to load schema file: %v", err)
 		return nil, err
 	}
 	jsonType, err := isJSON(content)
@@ -189,7 +204,7 @@ func getJsonFileAsMap(content []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	err := json.Unmarshal(content, &data)
 	if err != nil {
-		log.Fatalf("[GetJsonFileAsMap] Failed to parse the data: %v", err)
+		logs.ERROR("[GetJsonFileAsMap] Failed to parse the data", err)
 		return nil, err
 	}
 	return data, nil
@@ -199,7 +214,7 @@ func getJsonFileAsMapArray(content []byte) ([]map[string]interface{}, error) {
 	var data []map[string]interface{}
 	err := json.Unmarshal(content, &data)
 	if err != nil {
-		log.Fatalf("[GetJsonFileAsMapArray] Failed to parse the data: %v", err)
+		logs.ERROR("[GetJsonFileAsMapArray] Failed to parse the data: %v", err)
 		return nil, err
 	}
 	return data, nil

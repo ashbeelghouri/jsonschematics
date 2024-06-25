@@ -1,12 +1,16 @@
 package validators
 
+import "github.com/ashbeelghouri/jsonschematics/utils"
+
 type Validators struct {
 	ValidationFns map[string]Validator
+	Logger        utils.Logger
 }
 
 type Validator func(interface{}, map[string]interface{}) error
 
 func (v *Validators) RegisterValidator(name string, fn Validator) {
+	v.Logger.DEBUG("registering validator:", name)
 	if v.ValidationFns == nil {
 		v.ValidationFns = make(map[string]Validator)
 	}
@@ -14,6 +18,7 @@ func (v *Validators) RegisterValidator(name string, fn Validator) {
 }
 
 func (v *Validators) BasicValidators() {
+	v.Logger.DEBUG("loading all the basic validators")
 	// String Validators
 	v.RegisterValidator("IsString", IsString)
 	v.RegisterValidator("NotEmpty", NotEmpty)
@@ -24,9 +29,9 @@ func (v *Validators) BasicValidators() {
 	v.RegisterValidator("InBetweenLengthAllowed", InBetweenLengthAllowed)
 	v.RegisterValidator("NoSpecialCharacters", NoSpecialCharacters)
 	v.RegisterValidator("HaveSpecialCharacters", HaveSpecialCharacters)
-	v.RegisterValidator("HaveSpecialCharacters", LeastOneUpperCase)
-	v.RegisterValidator("HaveSpecialCharacters", LeastOneLowerCase)
-	v.RegisterValidator("HaveSpecialCharacters", LeastOneDigit)
+	v.RegisterValidator("LeastOneUpperCase", LeastOneUpperCase)
+	v.RegisterValidator("LeastOneLowerCase", LeastOneLowerCase)
+	v.RegisterValidator("LeastOneDigit", LeastOneDigit)
 	v.RegisterValidator("IsURL", IsURL)
 	v.RegisterValidator("IsNotURL", IsNotURL)
 	v.RegisterValidator("HaveURLHostName", HaveURLHostName)
@@ -53,4 +58,6 @@ func (v *Validators) BasicValidators() {
 	//Arrays
 	v.RegisterValidator("ArrayLengthMax", ArrayLengthMax)
 	v.RegisterValidator("ArrayLengthMin", ArrayLengthMin)
+
+	v.Logger.DEBUG("basic validators loaded")
 }

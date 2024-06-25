@@ -11,6 +11,8 @@ func TestForObjData(t *testing.T) {
 	fnTimeStart := time.Now()
 	var schema Schematics
 	err := schema.LoadSchemaFromFile("json/schema.json")
+	schema.Logging.PrintErrorLogs = true
+	schema.Logging.PrintDebugLogs = true
 	if err != nil {
 		t.Error(err)
 	}
@@ -42,6 +44,8 @@ func TestForObjData(t *testing.T) {
 func TestForArrayData(t *testing.T) {
 	fnTimeStart := time.Now()
 	var schema1 Schematics
+	schema1.Logging.PrintErrorLogs = true
+	schema1.Logging.PrintDebugLogs = true
 	err := schema1.LoadSchemaFromFile("json/schema.json")
 	schema1.ArrayIdKey = "user.id"
 	if err != nil {
@@ -76,6 +80,8 @@ func TestForArrayData(t *testing.T) {
 func TestNestedArrays(t *testing.T) {
 	fnTimeStart := time.Now()
 	var schema Schematics
+	schema.Logging.PrintErrorLogs = true
+	schema.Logging.PrintDebugLogs = true
 	err := schema.LoadSchemaFromFile("json/arr-inside-obj-schema.json")
 	if err != nil {
 		t.Error(err)
@@ -101,6 +107,8 @@ func TestNestedArrays(t *testing.T) {
 func TestDeepValidationInArray(t *testing.T) {
 	fnTimeStart := time.Now()
 	var schema Schematics
+	schema.Logging.PrintErrorLogs = true
+	schema.Logging.PrintDebugLogs = true
 	err := schema.LoadSchemaFromFile("json/arr-inside-obj-schema.json")
 	if err != nil {
 		log.Println("[TestDeepValidationInArray] unable to load the schema from json file: ", err)
