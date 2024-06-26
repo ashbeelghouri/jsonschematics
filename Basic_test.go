@@ -129,7 +129,7 @@ func TestDeepValidationInArray(t *testing.T) {
 		log.Println("[TestDeepValidationInArray] json errors:", string(jsonErrors))
 	}
 	newData := schema.Operate(data)
-	log.Println("[TestDeepValidationInArray] after operations:", newData)
+	log.Println("[TestDeepValidationInArray] after operations", newData)
 	log.Println("[TestDeepValidationInArray] total time taken:", time.Now().Sub(fnTimeStart))
 }
 
