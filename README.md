@@ -158,11 +158,12 @@ func main() {
     }
 	schematics.Validators.RegisterValidator("StringIsInsideArr", func(i interface{}, attr map[string]interface{}) error {
     	str := i.(string)
-    	strArr := attr["arr"].([]string)
+    	strArr := attr["arr"].([]interface{})
     	found := false
     	if len(strArr) > 0 {
     		for _, item := range strArr {
-    			if item == str {
+                        itemStr := item.(string)
+    			if itemStr == str {
     				found = true
     			}
     		}
@@ -175,6 +176,36 @@ func main() {
 }
 
 ```
+
+#### Get Error Messages as a String Slice
+we can get all the error related information as a slice of string, for formatting the messages we can use pre-defined tags that will transform the message into the desired format provided:
+
+- %message (error message from the validator)
+- %target  (name of the field on which validation is performed)
+- %validator (name of the validator that is validating the field)
+- %value (value on which all the validators are validating)
+
+**format example** ```validation error %message for %target with validation on %validator, provided: %value```
+
+```golang
+package main
+
+import (
+    "fmt"
+    "github.com/ashbeelghouri/jsonschematics"
+)
+
+func main() {
+	var schematics jsonschematics.Schematics
+    err := jsonschematics.LoadSchemaFromFile("path-to-your-schema.json")
+    if err != nil {
+        fmt.Println("String Array of Errors:", err.ExtractAsStrings("%message"))
+    }else {
+        fmt.Println("Schema Loaded Successfully")
+    }
+}
+```
+
 
 ### Operations
 
