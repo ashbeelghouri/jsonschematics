@@ -363,6 +363,33 @@ If you want to get the single Error, you can define the error format like below:
 * ID is the target array key value to identify the validators inside the array, it is very important to define the arrayKeyID, so we can identify which row of an array have the validation issues.
 ```
 
+#### List of Basic Validators
+### List of Basic Validators
+
+| **String**                  | **Number**       | **Date**         | **Array**                    |
+|-----------------------------|------------------|------------------|------------------------------|
+| IsString                    | IsNumber         | IsValidDate      | ArrayLengthMax               |
+| NotEmpty                    | MaxAllowed       | IsLessThanNow    | ArrayLengthMin               |
+| StringTakenFromOptions      | MinAllowed       | IsMoreThanNow    | StringsTakenFromOptions      |
+| IsEmail                     | InBetween        | IsBefore         |                              |
+| MaxLengthAllowed            |                  | IsAfter          |                              |
+| MinLengthAllowed            |                  | IsInBetweenTime  |                              |
+| InBetweenLengthAllowed      |                  |                  |                              |
+| NoSpecialCharacters         |                  |                  |                              |
+| HaveSpecialCharacters       |                  |                  |                              |
+| LeastOneUpperCase           |                  |                  |                              |
+| LeastOneLowerCase           |                  |                  |                              |
+| LeastOneDigit               |                  |                  |                              |
+| IsURL                       |                  |                  |                              |
+| IsNotURL                    |                  |                  |                              |
+| HaveURLHostName             |                  |                  |                              |
+| HaveQueryParameter          |                  |                  |                              |
+| IsHttps                     |                  |                  |                              |
+| IsURL                       |                  |                  |                              |
+| LIKE                        |                  |                  |                              |
+| MatchRegex                  |                  |                  |                              |
+
+
 #### Go Version
 ```golang
 go 1.22.1
