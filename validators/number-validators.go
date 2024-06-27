@@ -6,8 +6,7 @@ import (
 )
 
 func IsNumber(i interface{}, _ map[string]interface{}) error {
-	_, ok := i.(float64)
-	if !ok {
+	if _, ok := i.(float64); !ok {
 		return errors.New(fmt.Sprintf("%s is not a number", i))
 	}
 	return nil

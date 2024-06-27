@@ -47,53 +47,68 @@ func IsValidDate(i interface{}, _ map[string]interface{}) error {
 
 func IsLessThanNow(i interface{}, _ map[string]interface{}) error {
 	date := InterfaceToDate(i)
+	if date == nil {
+		return errors.New("invalid date provided")
+	}
 	now := time.Now()
 	if now.After(*date) {
 		layout := "2006-01-02 15:04:05"
-		return errors.New(fmt.Sprintf("%s has been passed now", date.Format(layout)))
+		return fmt.Errorf("%s has been passed now", date.Format(layout))
 	}
 	return nil
 }
 
 func IsMoreThanNow(i interface{}, _ map[string]interface{}) error {
 	date := InterfaceToDate(i)
+	if date == nil {
+		return errors.New("invalid date provided")
+	}
 	now := time.Now()
 	if now.Before(*date) {
 		layout := "2006-01-02 15:04:05"
-		return errors.New(fmt.Sprintf("%s has not yet passed", date.Format(layout)))
+		return fmt.Errorf("%s has not yet passed", date.Format(layout))
 	}
 	return nil
 }
 
 func IsBefore(i interface{}, attr map[string]interface{}) error {
 	date := InterfaceToDate(i)
+	if date == nil {
+		return errors.New("invalid date provided")
+	}
 	comparableDate := InterfaceToDate(attr["maxTime"])
 
 	if date.After(*comparableDate) {
 		layout := "2006-01-02 15:04:05"
-		return errors.New(fmt.Sprintf("%s is after %s", date.Format(layout), comparableDate.Format(layout)))
+		return fmt.Errorf("%s is after %s", date.Format(layout), comparableDate.Format(layout))
 	}
 
 	return nil
 }
 func IsAfter(i interface{}, attr map[string]interface{}) error {
 	date := InterfaceToDate(i)
+	if date == nil {
+		return errors.New("invalid date provided")
+	}
 	comparableDate := InterfaceToDate(attr["maxTime"])
 
 	if date.Before(*comparableDate) {
 		layout := "2006-01-02 15:04:05"
-		return errors.New(fmt.Sprintf("%s is after %s", date.Format(layout), comparableDate.Format(layout)))
+		return fmt.Errorf("%s is after %s", date.Format(layout), comparableDate.Format(layout))
 	}
 
 	return nil
 }
 func IsInBetweenTime(i interface{}, attr map[string]interface{}) error {
 	date := InterfaceToDate(i)
+	if date == nil {
+		return errors.New("invalid date provided")
+	}
 	comparableMaxDate := InterfaceToDate(attr["maxTime"])
 	comparableMinDate := InterfaceToDate(attr["minTime"])
 	if !(date.Before(*comparableMaxDate) && date.After(*comparableMinDate)) {
 		layout := "2006-01-02 15:04:05"
-		return errors.New(fmt.Sprintf("%s is before %s or after %s", date.Format(layout), comparableMinDate.Format(layout), comparableMaxDate.Format(layout)))
+		return fmt.Errorf("%s is before %s or after %s", date.Format(layout), comparableMinDate.Format(layout), comparableMaxDate.Format(layout))
 	}
 	return nil
 }
