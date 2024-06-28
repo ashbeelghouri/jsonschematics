@@ -30,11 +30,15 @@ type Schema1o1 struct {
 }
 
 type Field1o1 struct {
-	DependsOn   []string       `json:"depends_on"`
-	TargetKey   string         `json:"target_key"`
-	Description string         `json:"description"`
-	Validators  []ValidOptn1o1 `json:"validators"`
-	Operators   []ValidOptn1o1 `json:"operators"`
+	DependsOn             []string               `json:"depends_on"`
+	Name                  string                 `json:"name"`
+	Type                  string                 `json:"type"`
+	TargetKey             string                 `json:"target_key"`
+	Description           string                 `json:"description"`
+	Validators            []ValidOptn1o1         `json:"validators"`
+	Operators             []ValidOptn1o1         `json:"operators"`
+	L10n                  map[string]interface{} `json:"l10n"`
+	AdditionalInformation map[string]interface{} `json:"additional_information"`
 }
 
 type ValidOptn1o1 struct {
@@ -312,19 +316,28 @@ func translateSchema1o1(schemaMap []byte) (*Schema, error) {
 
 	for _, f := range schema1o1.Fields {
 		fd := Field{
-			DependsOn:   f.DependsOn,
-			TargetKey:   f.TargetKey,
-			Description: f.Description,
+			DependsOn:             f.DependsOn,
+			TargetKey:             f.TargetKey,
+			Description:           f.Description,
+			Validators:            make(map[string]Constant),
+			Operators:             make(map[string]Constant),
+			Name:                  f.Name,
+			AdditionalInformation: f.AdditionalInformation,
+			L10n:                  f.L10n,
+			Type:                  f.Type,
 		}
-
-		validators := make(map[string]Constant)
 		for _, validator := range f.Validators {
-			validators[validator.Name] = Constant{
+			fd.Validators[validator.Name] = Constant{
 				Attributes: validator.Attr,
 				ErrMsg:     validator.Err,
 			}
 		}
-		fd.Validators = validators
+		for _, operator := range f.Operators {
+			fd.Operators[operator.Name] = Constant{
+				Attributes: operator.Attr,
+				ErrMsg:     operator.Err,
+			}
+		}
 		fields = append(fields, fd)
 	}
 	baseSchema.Fields = fields
