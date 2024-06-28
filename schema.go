@@ -389,7 +389,20 @@ func (s *Schematics) performOperationArray(data []map[string]interface{}) *[]map
 	return nil
 }
 
-func (s *Schematics) MergeFields(sc2 *Schematics) *Schematics {
-	s.Schema.Fields = append(s.Schema.Fields, sc2.Schema.Fields...)
+func (s *Schematics) MergeFields(sc2 *Schematics, duplicateKeys bool) *Schematics {
+	if duplicateKeys {
+		s.Schema.Fields = append(s.Schema.Fields, sc2.Schema.Fields...)
+	} else {
+		allKeys := map[string]bool{}
+		for _, f := range s.Schema.Fields {
+			allKeys[f.TargetKey] = true
+		}
+		for _, field := range sc2.Schema.Fields {
+			if !allKeys[field.TargetKey] {
+				s.Schema.Fields = append(s.Schema.Fields, field)
+			}
+		}
+	}
+
 	return s
 }
