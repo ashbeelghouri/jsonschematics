@@ -30,13 +30,15 @@ type Schema struct {
 }
 
 type Field struct {
-	DependsOn   []string               `json:"depends_on"`
-	Name        string                 `json:"name"`
-	TargetKey   string                 `json:"target_key"`
-	Description string                 `json:"description"`
-	Validators  map[string]Constant    `json:"validators"`
-	Operators   map[string]Constant    `json:"operators"`
-	L10n        map[string]interface{} `json:"l10n"`
+	DependsOn             []string               `json:"depends_on"`
+	Name                  string                 `json:"name"`
+	Type                  string                 `json:"type"`
+	TargetKey             string                 `json:"target_key"`
+	Description           string                 `json:"description"`
+	Validators            map[string]Constant    `json:"validators"`
+	Operators             map[string]Constant    `json:"operators"`
+	L10n                  map[string]interface{} `json:"l10n"`
+	AdditionalInformation map[string]interface{} `json:"additional_information"`
 }
 
 type Constant struct {
@@ -98,7 +100,7 @@ func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
 	logs.DEBUG("basic validator loaded")
 	s.Operators.LoadBasicOperations()
 	if s.Separator == "" {
-		logs.DEBUG("seperator set to '.'")
+		logs.DEBUG("separator set to '.'")
 		s.Separator = "."
 	}
 	if s.Locale == "" {
@@ -385,4 +387,9 @@ func (s *Schematics) performOperationArray(data []map[string]interface{}) *[]map
 		return &obj
 	}
 	return nil
+}
+
+func (s *Schematics) MergeFields(sc2 *Schematics) *Schematics {
+	s.Schema.Fields = append(s.Schema.Fields, sc2.Schema.Fields...)
+	return s
 }
