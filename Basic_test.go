@@ -22,9 +22,7 @@ func TestForObjData(t *testing.T) {
 	}
 	start := time.Now()
 	errs := schema.Validate(data)
-	end := time.Now()
-
-	log.Printf("[SINGLE OBJ] Validation Time: %v", end.Sub(start))
+	log.Printf("[SINGLE OBJ] Validation Time: %v", time.Since(start))
 	log.Print("[SINGLE OBJ] have single errors: ", errs.HaveSingleError("", ""))
 	errorsFromValidate, err := json.Marshal(errs)
 	if err != nil {
@@ -33,11 +31,10 @@ func TestForObjData(t *testing.T) {
 	log.Println("[SINGLE OBJ] errorsFromValidate: ", string(errorsFromValidate))
 	start = time.Now()
 	newData := schema.Operate(data)
-	end = time.Now()
-	log.Printf("[SINGLE OBJ] Operaions Time: %v", end.Sub(start))
+	log.Printf("[SINGLE OBJ] Operaions Time: %v", time.Since(start))
 	log.Printf("[SINGLE OBJ] Updated DATA: %v", newData)
 
-	log.Printf("[SINGLE OBJ] total time taken: %v", time.Now().Sub(fnTimeStart))
+	log.Printf("[SINGLE OBJ] total time taken: %v", time.Since(fnTimeStart))
 	log.Println("-------------------------------------------")
 }
 
@@ -57,9 +54,7 @@ func TestForArrayData(t *testing.T) {
 	}
 	start := time.Now()
 	errs := schema1.Validate(data)
-	end := time.Now()
-
-	log.Printf("[ARRAY OF OBJ] Validation Time: %v", end.Sub(start))
+	log.Printf("[ARRAY OF OBJ] Validation Time: %v", time.Since(start))
 	if errs != nil {
 		obj, err := json.Marshal(errs)
 		if err != nil {
@@ -69,11 +64,10 @@ func TestForArrayData(t *testing.T) {
 	} else {
 		start = time.Now()
 		newData := schema1.Operate(data)
-		end = time.Now()
-		log.Printf("[ARRAY OF OBJ] Operation Time: %v", end.Sub(start))
+		log.Printf("[ARRAY OF OBJ] Operation Time: %v", time.Since(start))
 		log.Printf("[ARRAY OF OBJ] Updated Data: %v", newData)
 	}
-	log.Printf("[ARRAY OF OBJ] total time taken: %v", time.Now().Sub(fnTimeStart))
+	log.Printf("[ARRAY OF OBJ] total time taken: %v", time.Since(fnTimeStart))
 	log.Println("-------------------------------------------")
 }
 
@@ -90,7 +84,9 @@ func TestNestedArrays(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	start := time.Now()
 	errs := schema.Validate(data)
+	log.Printf("[TestNestedArrays] Validation Time: %v", time.Since(start))
 	if errs != nil {
 		jsonErrors, err := json.Marshal(errs)
 		if err != nil {
@@ -99,9 +95,11 @@ func TestNestedArrays(t *testing.T) {
 		log.Println("[TestNestedArrays] json errors:", string(jsonErrors))
 	}
 
+	start = time.Now()
 	newData := schema.Operate(data)
+	log.Printf("[TestNestedArrays] Operation Time: %v", time.Since(start))
 	log.Println("[TestNestedArrays] after operations:", newData)
-	log.Println("[TestNestedArrays] total time taken:", time.Now().Sub(fnTimeStart))
+	log.Println("[TestNestedArrays] total time taken:", time.Since(fnTimeStart))
 }
 
 func TestDeepValidationInArray(t *testing.T) {
@@ -119,7 +117,9 @@ func TestDeepValidationInArray(t *testing.T) {
 		log.Println("[TestDeepValidationInArray] unable to load the data from json file: ", err)
 		t.Error(err)
 	}
+	start := time.Now()
 	errs := schema.Validate(data)
+	log.Printf("[TestDeepValidationInArray] Validation Time: %v", time.Since(start))
 
 	if errs != nil {
 		jsonErrors, err := json.Marshal(errs)
@@ -128,9 +128,11 @@ func TestDeepValidationInArray(t *testing.T) {
 		}
 		log.Println("[TestDeepValidationInArray] json errors:", string(jsonErrors))
 	}
+	start = time.Now()
 	newData := schema.Operate(data)
+	log.Printf("[TestDeepValidationInArray] Operation Time: %v", time.Since(start))
 	log.Println("[TestDeepValidationInArray] after operations:", newData)
-	log.Println("[TestDeepValidationInArray] total time taken:", time.Now().Sub(fnTimeStart))
+	log.Println("[TestDeepValidationInArray] total time taken:", time.Since(fnTimeStart))
 }
 
 func TestSchemaVersioning(t *testing.T) {
@@ -143,5 +145,5 @@ func TestSchemaVersioning(t *testing.T) {
 	}
 	log.Println("Schema Version 1.1", schema)
 
-	log.Println("[TestDeepValidationInArray] total time taken:", time.Now().Sub(fnTimeStart))
+	log.Println("[TestSchemaVersioning] total time taken:", time.Since(fnTimeStart))
 }

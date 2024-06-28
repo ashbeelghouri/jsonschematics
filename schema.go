@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/utils"
 	"github.com/ashbeelghouri/jsonschematics/validators"
-	"log"
-	"os"
 )
 
 var logs utils.Logger
@@ -64,6 +65,9 @@ func (s *Schematics) LoadSchemaFromFile(path string) error {
 		return err
 	}
 	schema, err := HandleSchemaVersions(content)
+	if err != nil {
+		return err
+	}
 	s.Schema = *schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
@@ -197,13 +201,14 @@ func (s *Schematics) Validate(data interface{}) *ErrorMessages {
 	dataType, item := canConvert(bytes)
 	if item == nil {
 		logs.ERROR("error occurred when checking if this data is an array or object")
-		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", err.Error(), "validate")
+		errMsg := "unknown error"
+		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", errMsg, "validate")
 		return &upperLevelErrors
 	}
 	logs.DEBUG("data type is:", dataType)
 	if dataType == "object" {
 		logs.DEBUG("data is an object")
-		if obj, ok := item.(map[string]interface{}); item != nil && ok {
+		if obj, ok := item.(map[string]interface{}); ok {
 			return s.validateSingle(obj)
 		} else {
 			logs.ERROR("unable to recognize the object for validations")
@@ -213,7 +218,7 @@ func (s *Schematics) Validate(data interface{}) *ErrorMessages {
 
 	} else if dataType == "array" {
 		logs.DEBUG("data is an array")
-		if obj, ok := item.([]map[string]interface{}); item != nil && ok {
+		if obj, ok := item.([]map[string]interface{}); ok {
 			return s.validateArray(obj)
 		} else {
 			logs.ERROR("unable to recognize the array for validations")
@@ -324,13 +329,14 @@ func (s *Schematics) Operate(data interface{}) interface{} {
 	dataType, item := canConvert(bytes)
 	if item == nil {
 		logs.ERROR("[operate] error occurred when checking if this data is an array or object")
-		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", err.Error(), "operate")
+		errMsg := "unknown error"
+		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", errMsg, "operate")
 		return &upperLevelErrors
 	}
 
 	if dataType == "object" {
 		logs.DEBUG("[operate] data is an object")
-		if obj, ok := item.(map[string]interface{}); item != nil && ok {
+		if obj, ok := item.(map[string]interface{}); ok {
 			return s.performOperationSingle(obj)
 		} else {
 			logs.ERROR("unable to recognize the object for operations")
@@ -340,7 +346,7 @@ func (s *Schematics) Operate(data interface{}) interface{} {
 
 	} else if dataType == "array" {
 		logs.DEBUG("[operate] data is an array")
-		if obj, ok := item.([]map[string]interface{}); item != nil && ok {
+		if obj, ok := item.([]map[string]interface{}); ok {
 			return s.performOperationArray(obj)
 		} else {
 			logs.ERROR("unable to recognize the array for operations")
