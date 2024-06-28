@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/utils"
 	"github.com/ashbeelghouri/jsonschematics/validators"
-	"log"
-	"os"
 )
 
 var logs utils.Logger
@@ -29,13 +30,15 @@ type Schema struct {
 }
 
 type Field struct {
-	DependsOn   []string               `json:"depends_on"`
-	Name        string                 `json:"name"`
-	TargetKey   string                 `json:"target_key"`
-	Description string                 `json:"description"`
-	Validators  map[string]Constant    `json:"validators"`
-	Operators   map[string]Constant    `json:"operators"`
-	L10n        map[string]interface{} `json:"l10n"`
+	DependsOn             []string               `json:"depends_on"`
+	Name                  string                 `json:"name"`
+	Type                  string                 `json:"type"`
+	TargetKey             string                 `json:"target_key"`
+	Description           string                 `json:"description"`
+	Validators            map[string]Constant    `json:"validators"`
+	Operators             map[string]Constant    `json:"operators"`
+	L10n                  map[string]interface{} `json:"l10n"`
+	AdditionalInformation map[string]interface{} `json:"additional_information"`
 }
 
 type Constant struct {
@@ -64,6 +67,9 @@ func (s *Schematics) LoadSchemaFromFile(path string) error {
 		return err
 	}
 	schema, err := HandleSchemaVersions(content)
+	if err != nil {
+		return err
+	}
 	s.Schema = *schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
@@ -94,7 +100,7 @@ func (s *Schematics) LoadSchemaFromMap(m *map[string]interface{}) error {
 	logs.DEBUG("basic validator loaded")
 	s.Operators.LoadBasicOperations()
 	if s.Separator == "" {
-		logs.DEBUG("seperator set to '.'")
+		logs.DEBUG("separator set to '.'")
 		s.Separator = "."
 	}
 	if s.Locale == "" {
@@ -197,13 +203,14 @@ func (s *Schematics) Validate(data interface{}) *ErrorMessages {
 	dataType, item := canConvert(bytes)
 	if item == nil {
 		logs.ERROR("error occurred when checking if this data is an array or object")
-		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", err.Error(), "validate")
+		errMsg := "unknown error"
+		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", errMsg, "validate")
 		return &upperLevelErrors
 	}
 	logs.DEBUG("data type is:", dataType)
 	if dataType == "object" {
 		logs.DEBUG("data is an object")
-		if obj, ok := item.(map[string]interface{}); item != nil && ok {
+		if obj, ok := item.(map[string]interface{}); ok {
 			return s.validateSingle(obj)
 		} else {
 			logs.ERROR("unable to recognize the object for validations")
@@ -213,7 +220,7 @@ func (s *Schematics) Validate(data interface{}) *ErrorMessages {
 
 	} else if dataType == "array" {
 		logs.DEBUG("data is an array")
-		if obj, ok := item.([]map[string]interface{}); item != nil && ok {
+		if obj, ok := item.([]map[string]interface{}); ok {
 			return s.validateArray(obj)
 		} else {
 			logs.ERROR("unable to recognize the array for validations")
@@ -324,13 +331,14 @@ func (s *Schematics) Operate(data interface{}) interface{} {
 	dataType, item := canConvert(bytes)
 	if item == nil {
 		logs.ERROR("[operate] error occurred when checking if this data is an array or object")
-		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", err.Error(), "operate")
+		errMsg := "unknown error"
+		upperLevelErrors.AddError("BYTES", "DETERMINE_IS_JSON", errMsg, "operate")
 		return &upperLevelErrors
 	}
 
 	if dataType == "object" {
 		logs.DEBUG("[operate] data is an object")
-		if obj, ok := item.(map[string]interface{}); item != nil && ok {
+		if obj, ok := item.(map[string]interface{}); ok {
 			return s.performOperationSingle(obj)
 		} else {
 			logs.ERROR("unable to recognize the object for operations")
@@ -340,7 +348,7 @@ func (s *Schematics) Operate(data interface{}) interface{} {
 
 	} else if dataType == "array" {
 		logs.DEBUG("[operate] data is an array")
-		if obj, ok := item.([]map[string]interface{}); item != nil && ok {
+		if obj, ok := item.([]map[string]interface{}); ok {
 			return s.performOperationArray(obj)
 		} else {
 			logs.ERROR("unable to recognize the array for operations")
@@ -379,4 +387,9 @@ func (s *Schematics) performOperationArray(data []map[string]interface{}) *[]map
 		return &obj
 	}
 	return nil
+}
+
+func (s *Schematics) MergeFields(sc2 *Schematics) *Schematics {
+	s.Schema.Fields = append(s.Schema.Fields, sc2.Schema.Fields...)
+	return s
 }

@@ -31,10 +31,7 @@ func (em *ErrorMessages) AddErrorsForArray(validator string, target string, err 
 }
 
 func (em *ErrorMessages) HaveErrors() bool {
-	if len(em.Messages) > 0 {
-		return true
-	}
-	return false
+	return len(em.Messages) > 0
 }
 
 func (em *ErrorMessages) ExtractAsStrings(format string) *[]string {

@@ -181,6 +181,9 @@ func GetJson(path string) (interface{}, error) {
 		return nil, err
 	}
 	jsonType, err := isJSON(content)
+	if err != nil {
+		return nil, err
+	}
 	switch jsonType {
 	case "object":
 		mapper, err := getJsonFileAsMap(content)
