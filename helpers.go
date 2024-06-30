@@ -181,7 +181,7 @@ func canConvert(content []byte) (string, interface{}) {
 func GetJson(path string) (interface{}, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		logs.ERROR("Failed to load schema file: %v", err)
+		Logs.ERROR("Failed to load schema file: %v", err)
 		return nil, err
 	}
 	jsonType, err := isJSON(content)
@@ -211,7 +211,7 @@ func getJsonFileAsMap(content []byte) (map[string]interface{}, error) {
 	var data map[string]interface{}
 	err := json.Unmarshal(content, &data)
 	if err != nil {
-		logs.ERROR("[GetJsonFileAsMap] Failed to parse the data", err)
+		Logs.ERROR("[GetJsonFileAsMap] Failed to parse the data", err)
 		return nil, err
 	}
 	return data, nil
@@ -221,7 +221,7 @@ func getJsonFileAsMapArray(content []byte) ([]map[string]interface{}, error) {
 	var data []map[string]interface{}
 	err := json.Unmarshal(content, &data)
 	if err != nil {
-		logs.ERROR("[GetJsonFileAsMapArray] Failed to parse the data: %v", err)
+		Logs.ERROR("[GetJsonFileAsMapArray] Failed to parse the data: %v", err)
 		return nil, err
 	}
 	return data, nil
@@ -342,4 +342,24 @@ func translateSchema1o1(schemaMap []byte) (*Schema, error) {
 	}
 	baseSchema.Fields = fields
 	return &baseSchema, nil
+}
+
+func (f *Field) UnmarshalJSON(data []byte) error {
+	type Alias Field
+	aux := &struct {
+		DisplayName string `json:"display_name"`
+		*Alias
+	}{
+		Alias: (*Alias)(f),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	// Set Name to DisplayName if DisplayName is provided
+	if aux.DisplayName != "" {
+		f.Name = aux.DisplayName
+	}
+
+	return nil
 }

@@ -21,12 +21,12 @@ type ErrorMessages struct {
 }
 
 func (em *ErrorMessages) AddError(validator string, target string, err string, value interface{}) {
-	logs.DEBUG("adding new error message", err)
+	Logs.DEBUG("adding new error message", err)
 	em.Messages = append(em.Messages, ErrorMessage{Message: err, Validator: validator, Target: target, Value: value, ID: nil})
 }
 
 func (em *ErrorMessages) AddErrorsForArray(validator string, target string, err string, value interface{}, id interface{}) {
-	logs.DEBUG("adding error for arrays", err, "on id: ", id)
+	Logs.DEBUG("adding error for arrays", err, "on id: ", id)
 	em.Messages = append(em.Messages, ErrorMessage{Message: err, Validator: validator, Target: target, Value: value, ID: id})
 }
 
@@ -35,7 +35,7 @@ func (em *ErrorMessages) HaveErrors() bool {
 }
 
 func (em *ErrorMessages) ExtractAsStrings(format string) *[]string {
-	logs.DEBUG("extracting errors as a string")
+	Logs.DEBUG("extracting errors as a string")
 	var errs []string
 	if !em.HaveErrors() {
 		return nil
@@ -60,7 +60,7 @@ func (em *ErrorMessages) ExtractAsStrings(format string) *[]string {
 }
 
 func (em *ErrorMessages) ExtractAsErrors(format string) []error {
-	logs.DEBUG("extracting errors as array of errors")
+	Logs.DEBUG("extracting errors as array of errors")
 	if !em.HaveErrors() {
 		return nil
 	}
@@ -79,7 +79,7 @@ func (em *ErrorMessages) ExtractAsErrors(format string) []error {
 */
 
 func (em *ErrorMessages) HaveSingleError(format string, appendWith string) error {
-	logs.DEBUG("joining all the errors to represent only one error")
+	Logs.DEBUG("joining all the errors to represent only one error")
 
 	if !em.HaveErrors() {
 		return nil
@@ -93,7 +93,7 @@ func (em *ErrorMessages) HaveSingleError(format string, appendWith string) error
 		}
 		return errors.New(strings.Join(*err, appendWith))
 	} else if err != nil {
-		logs.ERROR("[code=1] We are unable to determine the error :::: >>>> ", err)
+		Logs.ERROR("[code=1] We are unable to determine the error :::: >>>> ", err)
 		return errors.New("unable to determine the error")
 	}
 
