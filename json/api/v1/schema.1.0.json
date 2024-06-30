@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "global": {
+    "headers": [{
+      "target_key": "",
+      "validators": {},
+      "operators": {}
+    }]
+  },
+  "endpoints": [{
+    "path": "",
+    "method": "get",
+    "body": [{
+      "target_key": "",
+      "required": false,
+      "validators": {},
+      "operators": {}
+    }],
+    "headers": [{
+      "target_key": "",
+      "validators": {},
+      "operators": {}
+    }]
+  }]
+}
