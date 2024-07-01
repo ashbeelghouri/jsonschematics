@@ -98,17 +98,15 @@ func LoadMap(schemaMap interface{}) (*v0.Schematics, error) {
 }
 
 func transformSchematics(s Schematics) *v0.Schematics {
-	var baseSchematics v0.Schematics
+	var baseSchematics *v0.Schematics
 	baseSchematics.Locale = s.Locale
 	baseSchematics.Logging = s.Logging
 	baseSchematics.ArrayIdKey = s.ArrayIdKey
 	baseSchematics.Separator = s.Separator
-	baseSchematics.Validators = s.Validators
-	baseSchematics.Operators = s.Operators
 	baseSchematics.Validators.BasicValidators()
 	baseSchematics.Operators.LoadBasicOperations()
 	baseSchematics.Schema = *transformSchema(s.Schema)
-	return &baseSchematics
+	return baseSchematics
 }
 
 func transformSchema(schema Schema) *v0.Schema {
