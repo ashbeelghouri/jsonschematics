@@ -14,7 +14,7 @@
 To install the package, use the following command:
 
 ```sh
-go get github.com/ashbeelghouri/jsonschematics
+go get github.com/ashbeelghouri/jsonschematics@latest
 ```
 
 ## Usage
@@ -403,6 +403,26 @@ If you want to get the single error, you can define the error format like below:
 | IsURL                       |                  |                  |                              |
 | LIKE                        |                  |                  |                              |
 | MatchRegex                  |                  |                  |                              |
+
+#### Schema
+
+##### v2@latest
+v2 is the lates schema version designed.
+below are the required fields listed
+```golang
+fields <ARRAY> : [{
+    required <BOOLEAN>
+    depends_on <ARRAY OF STRINGS> : [] (can be empty)
+    target_key <STRING>
+    validators <ARRAY OF OBJ>: [{
+        name <STRING>
+    }]
+    operators <ARRAY OF OBJ>: [{
+      "name" <STRING>
+    }],
+}]
+```
+
 
 #### Go Version
 
