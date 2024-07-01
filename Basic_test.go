@@ -9,12 +9,14 @@ import (
 )
 
 func TestV2Validate(t *testing.T) {
-	schematics, err := v2.LoadJsonSchemaFile("test-data/schema/direct/v2/example-1.json")
+	schematics, err := v2.LoadJsonSchemaFile("test-data/schema/direct/v2/example-2.json")
 	if err != nil {
 		t.Error(err)
 	}
+	schematics.Logging.PrintDebugLogs = true
+	schematics.Logging.PrintErrorLogs = true
 	schematics.Validators.RegisterValidator("NewFun", NewFun)
-	content, err := os.ReadFile("test-data/data/direct/v2/example.json")
+	content, err := os.ReadFile("test-data/data/direct/v2/example-3.json")
 	if err != nil {
 		t.Error(err)
 	}
@@ -25,7 +27,6 @@ func TestV2Validate(t *testing.T) {
 	errs := schematics.Validate(jsonData)
 	log.Println(errs.GetStrings("en", "%data\n"))
 }
-
 func NewFun(i interface{}, attr map[string]interface{}) error {
 	log.Println(i)
 	log.Println(attr)

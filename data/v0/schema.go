@@ -12,8 +12,6 @@ import (
 	"strings"
 )
 
-var Logs utils.Logger
-
 type TargetKey string
 
 type Schematics struct {
@@ -42,6 +40,7 @@ type Field struct {
 	Operators             map[string]Constant    `json:"operators"`
 	L10n                  map[string]interface{} `json:"l10n"`
 	AdditionalInformation map[string]interface{} `json:"additional_information"`
+	logging               utils.Logger
 }
 
 type Constant struct {
@@ -51,31 +50,30 @@ type Constant struct {
 }
 
 func (s *Schematics) Configs() {
-	Logs = s.Logging
 	if s.Logging.PrintDebugLogs {
 		log.Println("debugger is on")
 	}
 	if s.Logging.PrintErrorLogs {
 		log.Println("error logging is on")
 	}
-	s.Validators.Logger = Logs
-	s.Operators.Logger = Logs
+	s.Validators.Logger = s.Logging
+	s.Operators.Logger = s.Logging
 }
 
 func (s *Schematics) LoadJsonSchemaFile(path string) error {
 	s.Configs()
 	content, err := os.ReadFile(path)
 	if err != nil {
-		Logs.ERROR("Failed to load schema file", err)
+		s.Logging.ERROR("Failed to load schema file", err)
 		return err
 	}
 	var schema Schema
 	err = json.Unmarshal(content, &schema)
 	if err != nil {
-		Logs.ERROR("Failed to unmarshall schema file", err)
+		s.Logging.ERROR("Failed to unmarshall schema file", err)
 		return err
 	}
-	Logs.DEBUG("Schema Loaded From File: ", schema)
+	s.Logging.DEBUG("Schema Loaded From File: ", schema)
 	s.Schema = schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
@@ -91,16 +89,16 @@ func (s *Schematics) LoadJsonSchemaFile(path string) error {
 func (s *Schematics) LoadMap(schemaMap interface{}) error {
 	JSON, err := json.Marshal(schemaMap)
 	if err != nil {
-		Logs.ERROR("Schema should be valid json map[string]interface", err)
+		s.Logging.ERROR("Schema should be valid json map[string]interface", err)
 		return err
 	}
 	var schema Schema
 	err = json.Unmarshal(JSON, &schema)
 	if err != nil {
-		Logs.ERROR("Invalid Schema", err)
+		s.Logging.ERROR("Invalid Schema", err)
 		return err
 	}
-	Logs.DEBUG("Schema Loaded From MAP: ", schema)
+	s.Logging.DEBUG("Schema Loaded From MAP: ", schema)
 	s.Schema = schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
@@ -124,15 +122,15 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 	}
 	for name, constants := range f.Validators {
 		err.Validator = name
-		Logs.DEBUG("Validator: ", name, constants)
+		f.logging.DEBUG("Validator: ", name, constants)
 		if name != "" {
-			Logs.DEBUG("Name of the validator is not given: ", name)
+			f.logging.DEBUG("Name of the validator is not given: ", name)
 			err.Validator = name
 		}
 		if f.IsRequired && value == nil {
 			err.Validator = "Required"
 			err.AddMessage("en", "this is a required field")
-			Logs.DEBUG("Field is required but value is null")
+			f.logging.DEBUG("Field is required but value is null")
 			return &err
 		}
 
@@ -142,25 +140,25 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 
 		var fn validators.Validator
 		fn, exists := allValidators[name]
-		Logs.DEBUG("function exists? ", exists)
+		f.logging.DEBUG("function exists? ", exists)
 		if !exists {
-			Logs.ERROR("function not found", name)
+			f.logging.ERROR("function not found", name)
 			err.AddMessage("en", "validator not registered")
 			return &err
 		}
 
 		fnError := fn(value, constants.Attributes)
-		Logs.DEBUG("fnError: ", fnError)
+		f.logging.DEBUG("fnError: ", fnError)
 		if fnError != nil {
 			if constants.Error != "" {
-				Logs.DEBUG("Custom Error is Defined", constants.Error)
+				f.logging.DEBUG("Custom Error is Defined", constants.Error)
 				err.AddMessage("en", constants.Error)
 			}
 
 			if f.L10n != nil {
 				for locale, msg := range f.L10n {
 					if msg != nil {
-						Logs.DEBUG("L10n: ", locale, msg)
+						f.logging.DEBUG("L10n: ", locale, msg)
 						err.AddMessage(locale, msg.(string))
 					}
 				}
@@ -212,22 +210,23 @@ func (s *Schematics) Validate(jsonData interface{}) *errorHandler.Errors {
 }
 
 func (s *Schematics) ValidateObject(jsonData *map[string]interface{}, id *string) *errorHandler.Errors {
-	Logs.DEBUG("validating the object")
+	s.Logging.DEBUG("validating the object")
 	var errorMessages errorHandler.Errors
 	var baseError errorHandler.Error
 	flatData := *s.makeFlat(*jsonData)
-	Logs.DEBUG("here after flat data --> ", flatData)
+	s.Logging.DEBUG("here after flat data --> ", flatData)
 	uniqueID := ""
 
 	if id != nil {
 		uniqueID = *id
 	}
-	Logs.DEBUG("after unique id")
+	s.Logging.DEBUG("after unique id")
 	var missingFromDependants []string
 	for target, field := range s.Schema.Fields {
+		field.logging = s.Logging
 		baseError.Validator = "is-required"
 		matchingKeys := utils.FindMatchingKeys(flatData, string(target))
-		Logs.DEBUG("matching keys --> ", matchingKeys)
+		s.Logging.DEBUG("matching keys --> ", matchingKeys)
 		if len(matchingKeys) == 0 {
 			if field.IsRequired {
 				baseError.AddMessage("en", "this field is required")
@@ -235,14 +234,14 @@ func (s *Schematics) ValidateObject(jsonData *map[string]interface{}, id *string
 			}
 			continue
 		}
-		Logs.DEBUG("after is required --> ", matchingKeys)
+		s.Logging.DEBUG("after is required --> ", matchingKeys)
 		//	check for dependencies
 		if len(field.DependsOn) > 0 {
 			missing := false
 			for _, d := range field.DependsOn {
 				matchDependsOn := utils.FindMatchingKeys(flatData, d)
 				if !(utils.StringInStrings(string(target), missingFromDependants) == false && len(matchDependsOn) > 0) {
-					Logs.DEBUG("matched depends on", matchDependsOn)
+					s.Logging.DEBUG("matched depends on", matchDependsOn)
 					baseError.Validator = "depends-on"
 					baseError.AddMessage("en", "this field depends on other values which do not exists")
 					errorMessages.AddError(string(target), baseError)
@@ -258,7 +257,7 @@ func (s *Schematics) ValidateObject(jsonData *map[string]interface{}, id *string
 
 		for key, value := range matchingKeys {
 			validationError := field.Validate(value, s.Validators.ValidationFns, &uniqueID)
-			Logs.DEBUG(validationError)
+			s.Logging.DEBUG(validationError)
 			if validationError != nil {
 				errorMessages.AddError(key, *validationError)
 			}
@@ -273,7 +272,7 @@ func (s *Schematics) ValidateObject(jsonData *map[string]interface{}, id *string
 }
 
 func (s *Schematics) ValidateArray(jsonData []map[string]interface{}) *errorHandler.Errors {
-	Logs.DEBUG("validating the array")
+	s.Logging.DEBUG("validating the array")
 	var errs errorHandler.Errors
 	i := 0
 	for _, d := range jsonData {
@@ -289,7 +288,7 @@ func (s *Schematics) ValidateArray(jsonData []map[string]interface{}) *errorHand
 		id := arrayId.(string)
 		errorMessages = s.ValidateObject(&d, &id)
 		if errorMessages.HasErrors() {
-			Logs.ERROR("has errors", errorMessages.GetStrings("en", "%data\n"))
+			s.Logging.ERROR("has errors", errorMessages.GetStrings("en", "%data\n"))
 			errs.MergeErrors(errorMessages)
 		}
 		i = i + 1
@@ -307,7 +306,7 @@ func (f *Field) Operate(value interface{}, allOperations map[string]operators.Op
 	for operationName, operationConstants := range f.Operators {
 		customValidator, exists := allOperations[operationName]
 		if !exists {
-			Logs.ERROR("This operation does not exists in basic or custom operators", operationName)
+			f.logging.ERROR("This operation does not exists in basic or custom operators", operationName)
 			return nil
 		}
 		result := customValidator(value, operationConstants.Attributes)
@@ -324,7 +323,7 @@ func (s *Schematics) Operate(data interface{}) (interface{}, *errorHandler.Error
 	baseError.Validator = "operate-on-schema"
 	bytes, err := json.Marshal(data)
 	if err != nil {
-		Logs.ERROR("[operate] error converting the data into bytes", err)
+		s.Logging.ERROR("[operate] error converting the data into bytes", err)
 		baseError.AddMessage("en", "data is not valid json")
 		errorMessages.AddError("whole-data", baseError)
 		return nil, &errorMessages
@@ -332,7 +331,7 @@ func (s *Schematics) Operate(data interface{}) (interface{}, *errorHandler.Error
 
 	dataType, item := utils.IsValidJson(bytes)
 	if item == nil {
-		Logs.ERROR("[operate] error occurred when checking if this data is an array or object")
+		s.Logging.ERROR("[operate] error occurred when checking if this data is an array or object")
 		baseError.AddMessage("en", "can not convert the data into json")
 		errorMessages.AddError("whole-data", baseError)
 		return nil, &errorMessages

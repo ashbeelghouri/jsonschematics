@@ -1,0 +1,45 @@
+{
+  "fields": [
+    {
+      "display_name": "Quantity",
+      "name": "Quantity",
+      "type": "number",
+      "required": true,
+      "description": "check the quantity for 0 values",
+      "depends_on": [],
+      "target_key": "quantity",
+      "validators": [
+        {
+          "name": "IsNumber",
+          "error": "quantity should be numeric value"
+        },
+        {
+          "name": "MinAllowed",
+          "error": "least 1 item should be provided as a quantity to create a variant",
+          "attributes": {
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product ID",
+      "type": "string",
+      "required": false,
+      "description": "check if this is a valid product",
+      "depends_on": [],
+      "target_key": "product_id",
+      "validators": [
+        {
+          "name": "IsString",
+          "error": "Product id should be a string"
+        },
+        {
+          "name": "ValidProductID",
+          "error": "This product does not exists in our system"
+        }
+      ]
+    }
+  ],
+  "version": "2"
+}

@@ -7,11 +7,8 @@ import (
 	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/utils"
 	"github.com/ashbeelghouri/jsonschematics/validators"
-	"log"
 	"os"
 )
-
-var Logs utils.Logger
 
 type Schematics struct {
 	Schema     Schema
@@ -49,30 +46,15 @@ type Component struct {
 	L10n       map[string]interface{} `json:"l10n"`
 }
 
-func (s *Schematics) Configs() {
-	Logs = s.Logging
-	if s.Logging.PrintDebugLogs {
-		log.Println("debugger is on")
-	}
-	if s.Logging.PrintErrorLogs {
-		log.Println("error logging is on")
-	}
-	s.Validators.Logger = Logs
-	s.Operators.Logger = Logs
-}
-
 func LoadJsonSchemaFile(path string) (*v0.Schematics, error) {
 	var s Schematics
-	s.Configs()
 	content, err := os.ReadFile(path)
 	if err != nil {
-		Logs.ERROR("Failed to load schema file", err)
 		return nil, err
 	}
 	var schema Schema
 	err = json.Unmarshal(content, &schema)
 	if err != nil {
-		Logs.ERROR("Failed to unmarshall schema file", err)
 		return nil, err
 	}
 	s.Schema = schema
@@ -86,16 +68,13 @@ func LoadJsonSchemaFile(path string) (*v0.Schematics, error) {
 
 func LoadMap(schemaMap interface{}) (*v0.Schematics, error) {
 	var s Schematics
-	s.Configs()
 	jsonBytes, err := json.Marshal(schemaMap)
 	if err != nil {
-		Logs.ERROR("Schema should be valid json map[string]interface", err)
 		return nil, err
 	}
 	var schema Schema
 	err = json.Unmarshal(jsonBytes, &schema)
 	if err != nil {
-		Logs.ERROR("Failed to unmarshall schema file", err)
 		return nil, err
 	}
 	s.Schema = schema
@@ -104,7 +83,13 @@ func LoadMap(schemaMap interface{}) (*v0.Schematics, error) {
 
 func transformSchematics(s Schematics) *v0.Schematics {
 	var baseSchematics v0.Schematics
-	baseSchematics.Logging = s.Logging
+	if s.Logging.PrintDebugLogs {
+		baseSchematics.Logging.PrintDebugLogs = true
+	}
+	if s.Logging.PrintErrorLogs {
+		baseSchematics.Logging.PrintErrorLogs = true
+	}
+
 	baseSchematics.ArrayIdKey = s.ArrayIdKey
 	baseSchematics.Separator = s.Separator
 	baseSchematics.Validators.BasicValidators()
@@ -117,6 +102,7 @@ func transformSchema(schema Schema) *v0.Schema {
 	var baseSchema v0.Schema
 	baseSchema.Version = schema.Version
 	baseSchema.Fields = make(map[v0.TargetKey]v0.Field)
+
 	for _, field := range schema.Fields {
 		baseSchema.Fields[v0.TargetKey(field.TargetKey)] = v0.Field{
 			DependsOn:             field.DependsOn,
