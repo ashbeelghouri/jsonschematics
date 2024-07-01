@@ -58,8 +58,6 @@ func (s *Schematics) Configs() {
 	}
 	s.Validators.Logger = Logs
 	s.Operators.Logger = Logs
-	s.Validators.BasicValidators()
-	s.Operators.LoadBasicOperations()
 }
 
 func LoadJsonSchemaFile(path string) (*v0.Schematics, error) {
@@ -108,6 +106,8 @@ func transformSchematics(s Schematics) *v0.Schematics {
 	baseSchematics.Validators = s.Validators
 	baseSchematics.Operators = s.Operators
 	baseSchematics.Schema = *transformSchema(s.Schema)
+	baseSchematics.Validators.BasicValidators()
+	baseSchematics.Operators.LoadBasicOperations()
 	return &baseSchematics
 }
 
