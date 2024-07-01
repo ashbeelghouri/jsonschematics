@@ -149,7 +149,7 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 			return &err
 		}
 
-		fnError := fn(value, constants.Attributes
+		fnError := fn(value, constants.Attributes)
 		Logs.DEBUG("fnError: ", fnError)
 		if fnError != nil {
 			if constants.Error != "" {
