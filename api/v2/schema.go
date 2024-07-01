@@ -2,12 +2,15 @@ package v2
 
 import (
 	"encoding/json"
-	"github.com/ashbeelghouri/jsonschematics"
 	basic "github.com/ashbeelghouri/jsonschematics/api/v0"
+	"github.com/ashbeelghouri/jsonschematics/errorHandler"
 	"github.com/ashbeelghouri/jsonschematics/utils"
+	"log"
 	"net/http"
 	"os"
 )
+
+var Logs utils.Logger
 
 type Schema struct {
 	Version   string              `json:"version"`
@@ -45,20 +48,44 @@ type Component struct {
 	L10n       map[string]interface{}
 }
 
-func LoadJsonSchemaFile(path string) (*Schema, error) {
+func (s *Schema) Configs() {
+	Logs = s.Logger
+	if s.Logger.PrintDebugLogs {
+		log.Println("debugger is on")
+	}
+	if s.Logger.PrintErrorLogs {
+		log.Println("error logging is on")
+	}
+}
+
+func LoadJsonSchemaFile(path string) (*basic.Schema, error) {
 	var schema Schema
-	schema.Logger = jsonschematics.Logs
+	schema.Configs()
 	content, err := os.ReadFile(path)
 	if err != nil {
-		jsonschematics.Logs.ERROR("Failed to load schema file", err)
+		Logs.ERROR("Failed to load schema file", err)
 		return nil, err
 	}
-
 	err = json.Unmarshal(content, &schema)
 	if err != nil {
 		return nil, err
 	}
-	return &schema, nil
+	return schema.transformTov0(), nil
+}
+
+func LoadMap(schemaMap interface{}) (*basic.Schema, error) {
+	var s *Schema
+	s.Configs()
+	jsonBytes, err := json.Marshal(schemaMap)
+	if err != nil {
+		Logs.ERROR("Schema should be valid json map[string]interface", err)
+		return nil, err
+	}
+	err = json.Unmarshal(jsonBytes, &s)
+	if err != nil {
+		return nil, err
+	}
+	return s.transformTov0(), nil
 }
 
 func transformComponents(components []Component) map[basic.TargetKey]basic.Constant {
@@ -131,7 +158,7 @@ func (s *Schema) transformTov0() *basic.Schema {
 	return &baseSchema
 }
 
-func (s *Schema) ValidateRequest(r *http.Request) *jsonschematics.ErrorMessages {
+func (s *Schema) ValidateRequest(r *http.Request) *errorHandler.Errors {
 	baseSchema := s.transformTov0()
 	return baseSchema.ValidateRequest(r)
 }

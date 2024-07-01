@@ -1,0 +1,14 @@
+{
+    "user": {
+      "id": 2,
+      "profile": {
+        "name": {
+          "first": "nabeel",
+          "last": "francis"
+        },
+        "phone": "92039485729384",
+        "age": 12,
+        "email": "nabeel@protonmail.com"
+      }
+    }
+  }

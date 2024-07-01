@@ -1,9 +1,9 @@
 package v0
 
 import (
-	"github.com/ashbeelghouri/jsonschematics"
-	"github.com/ashbeelghouri/jsonschematics/api"
 	"github.com/ashbeelghouri/jsonschematics/api/parsers"
+	jsonschematics "github.com/ashbeelghouri/jsonschematics/data/v0"
+	"github.com/ashbeelghouri/jsonschematics/errorHandler"
 	"github.com/ashbeelghouri/jsonschematics/utils"
 	"net/http"
 	"regexp"
@@ -16,6 +16,8 @@ type Name string
 
 type Field struct {
 	DependsOn  []string
+	Name       string
+	Type       string
 	Required   bool
 	Validators map[TargetKey]Constant
 	Operators  map[TargetKey]Constant
@@ -58,17 +60,16 @@ func (s *Schema) GetSchematics(fieldType string, fields *map[TargetKey]Field) (*
 
 	schema := jsonschematics.Schema{
 		Version: s.Version,
-		Fields:  []jsonschematics.Field{},
+		Fields:  make(map[jsonschematics.TargetKey]jsonschematics.Field),
 	}
 
 	for target, f := range *fields {
-		FieldKeys.TargetKey = string(target)
 		var allValidators map[string]jsonschematics.Constant
 
 		for key, validator := range f.Validators {
 			allValidators[string(key)] = jsonschematics.Constant{
 				Attributes: validator.Attributes,
-				ErrMsg:     validator.ErrMsg,
+				Error:      validator.ErrMsg,
 				L10n:       validator.L10n,
 			}
 		}
@@ -76,47 +77,55 @@ func (s *Schema) GetSchematics(fieldType string, fields *map[TargetKey]Field) (*
 		for key, operator := range f.Operators {
 			allOperations[string(key)] = jsonschematics.Constant{
 				Attributes: operator.Attributes,
-				ErrMsg:     operator.ErrMsg,
+				Error:      operator.ErrMsg,
 				L10n:       operator.L10n,
 			}
 		}
+		FieldKeys.Type = f.Type
 		FieldKeys.Validators = allValidators
 		FieldKeys.Operators = allOperations
 		FieldKeys.L10n = s.Global.Headers[target].L10n
-		schema.Fields = append(schema.Fields, FieldKeys)
+		schema.Fields[jsonschematics.TargetKey(target)] = FieldKeys
 	}
 
 	schematics.Schema = schema
 	return &schematics, nil
 }
 
-func (s *Schema) ValidateRequest(r *http.Request) *jsonschematics.ErrorMessages {
-	var errorMessages jsonschematics.ErrorMessages
+func (s *Schema) ValidateRequest(r *http.Request) *errorHandler.Errors {
+	internalErrors := "internal-errors"
 
+	var errorMessages errorHandler.Errors
+	var errMsg errorHandler.Error
+	errMsg.Validator = "request"
+	errMsg.Value = "all"
 	transformedRequest, err := parsers.ParseRequest(r)
 	if err != nil {
 		s.Logger.ERROR(err.Error())
-		errorMessages.AddError("Request Transformation", "request", err.Error(), "")
+		errMsg.AddMessage("en", "unable to transform request")
+		errorMessages.AddError(internalErrors, errMsg)
 		return &errorMessages
 	}
 
 	globalHeadersSchematics, err := s.GetSchematics("Global Headers", &s.Global.Headers)
 	if err != nil {
 		s.Logger.ERROR(err.Error())
-		errorMessages.AddError("Global Headers", "global.headers", err.Error(), "")
+		errMsg.AddMessage("en", "schema conversion error")
+		errorMessages.AddError(internalErrors, errMsg)
 		return &errorMessages
 	}
 	errs := globalHeadersSchematics.Validate(transformedRequest["headers"])
-	if errs.HaveErrors() {
+	if errs.HasErrors() {
 		s.Logger.ERROR("all errors", err.Error())
 		return errs
 	}
 
 	for path, endpoint := range s.Endpoints {
-		regex := api.GetPathRegex(string(path))
+		regex := utils.GetPathRegex(string(path))
 		matched, err := regexp.MatchString(regex, transformedRequest["path"].(string))
 		if err != nil {
-			errorMessages.AddError("REGEX-MATCHING-FOR-ENDPOINT", "global.headers", err.Error(), "")
+			errMsg.AddMessage("en", "path not matched - regex not matched")
+			errorMessages.AddError(internalErrors, errMsg)
 			return &errorMessages
 		}
 		if matched {
@@ -128,38 +137,40 @@ func (s *Schema) ValidateRequest(r *http.Request) *jsonschematics.ErrorMessages 
 			headerSchematics, err := s.GetSchematics("Headers", &endpoint.Headers)
 			if err != nil {
 				s.Logger.ERROR(err.Error())
-				errorMessages.AddError("Global Headers", "headers", err.Error(), "")
+				errMsg.AddMessage("en", err.Error())
+				errorMessages.AddError(internalErrors, errMsg)
 				return &errorMessages
 			}
 			errs := headerSchematics.Validate(transformedRequest["headers"])
-			if errs.HaveErrors() {
-				s.Logger.ERROR("validation errors on headers:", errs.ExtractAsStrings(""))
+			if errs.HasErrors() {
+				s.Logger.ERROR("validation errors on headers:", errs.GetStrings("en", "%validator: %message"))
 				return errs
 			}
 			bodySchematics, err := s.GetSchematics("Body", &endpoint.Body)
 			if err != nil {
 				s.Logger.ERROR(err.Error())
-				errorMessages.AddError("BODY-Schema", "body", err.Error(), "")
+				errMsg.AddMessage("en", err.Error())
+				errorMessages.AddError(internalErrors, errMsg)
 				return &errorMessages
 			}
 			errs = bodySchematics.Validate(transformedRequest["body"])
-			if errs.HaveErrors() {
-				s.Logger.ERROR("validation errors on body:", errs.ExtractAsStrings(""))
+			if errs.HasErrors() {
+				s.Logger.ERROR("validation errors on body:", errs.GetStrings("en", "%validator: %message"))
 				return errs
 			}
 			querySchematics, err := s.GetSchematics("Query", &endpoint.Query)
 			if err != nil {
 				s.Logger.ERROR(err.Error())
-				errorMessages.AddError("Query-Schema", "query", err.Error(), "")
+				errMsg.AddMessage("en", err.Error())
+				errorMessages.AddError(internalErrors, errMsg)
 				return &errorMessages
 			}
 			errs = querySchematics.Validate(transformedRequest["query"])
-			if errs.HaveErrors() {
-				s.Logger.ERROR("validation errors on query:", errs.ExtractAsStrings(""))
+			if errs.HasErrors() {
+				s.Logger.ERROR("validation errors on query:", errs.GetStrings("en", "%validator: %message"))
 				return errs
 			}
 		}
-
 	}
 	return nil
 }

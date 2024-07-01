@@ -1,0 +1,44 @@
+[
+  {
+    "user": {
+      "id": 1,
+      "profile": {
+        "name": {
+          "first": "ghouri",
+          "last": "ghouri michael"
+        },
+        "phone": "03175043399",
+        "age": 10,
+        "email": "ashbeelghouri@protonmail.com"
+      }
+    }
+  },
+  {
+    "user": {
+      "id": 2,
+      "profile": {
+        "name": {
+          "first": "nabeel",
+          "last": "francis"
+        },
+        "phone": "92039485729384",
+        "age": 12,
+        "email": "nabeel@protonmail.com"
+      }
+    }
+  },
+  {
+    "user": {
+      "id": 3,
+      "profile": {
+        "name": {
+          "first": "dummY",
+          "last": "user one"
+        },
+        "phone": "889900993847",
+        "age": 10,
+        "email": "dummy.one@protonmail.com"
+      }
+    }
+  }
+]
