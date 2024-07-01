@@ -2,6 +2,7 @@ package v2
 
 import (
 	"encoding/json"
+	"errors"
 	v0 "github.com/ashbeelghouri/jsonschematics/data/v0"
 	"github.com/ashbeelghouri/jsonschematics/operators"
 	"github.com/ashbeelghouri/jsonschematics/utils"
@@ -75,8 +76,12 @@ func LoadJsonSchemaFile(path string) (*v0.Schematics, error) {
 		return nil, err
 	}
 	s.Schema = schema
-
-	return transformSchematics(s), nil
+	baseSchematics := transformSchematics(s)
+	if baseSchematics != nil {
+		return baseSchematics, nil
+	} else {
+		return nil, errors.New("could not load the base schema")
+	}
 }
 
 func LoadMap(schemaMap interface{}) (*v0.Schematics, error) {
@@ -98,15 +103,14 @@ func LoadMap(schemaMap interface{}) (*v0.Schematics, error) {
 }
 
 func transformSchematics(s Schematics) *v0.Schematics {
-	var baseSchematics *v0.Schematics
-	baseSchematics.Locale = s.Locale
+	var baseSchematics v0.Schematics
 	baseSchematics.Logging = s.Logging
 	baseSchematics.ArrayIdKey = s.ArrayIdKey
 	baseSchematics.Separator = s.Separator
 	baseSchematics.Validators.BasicValidators()
 	baseSchematics.Operators.LoadBasicOperations()
 	baseSchematics.Schema = *transformSchema(s.Schema)
-	return baseSchematics
+	return &baseSchematics
 }
 
 func transformSchema(schema Schema) *v0.Schema {
