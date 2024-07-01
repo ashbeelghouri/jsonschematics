@@ -137,7 +137,7 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 		var fn validators.Validator
 		fn, exists := allValidators[name]
 		if !exists {
-			log.Println("does not exists here!!", name)
+			Logs.ERROR("does not exists here!!", name)
 			err.AddMessage("en", "validator not registered")
 			return &err
 		}
@@ -171,48 +171,49 @@ func (s *Schematics) Validate(jsonData interface{}) *errorHandler.Errors {
 	var baseError errorHandler.Error
 	var errs errorHandler.Errors
 	baseError.Validator = "validate-object"
+	if s == nil {
+		baseError.AddMessage("en", "schema not loaded")
+		errs.AddError("whole-data", baseError)
+		return &errs
+	}
+
 	dataBytes, err := json.Marshal(jsonData)
 	if err != nil {
 		baseError.AddMessage("en", "data is not valid json")
 		errs.AddError("whole-data", baseError)
 		return &errs
 	}
-	dataType, item := utils.IsValidJson(dataBytes)
-	if item == nil {
+
+	var obj map[string]interface{}
+	var arr []map[string]interface{}
+	if err := json.Unmarshal(dataBytes, &obj); err == nil {
+		return s.ValidateObject(&obj, nil)
+	} else if err := json.Unmarshal(dataBytes, &arr); err == nil {
+		return s.ValidateArray(arr)
+	} else {
 		baseError.AddMessage("en", "invalid format provided for the data, can only be map[string]interface or []map[string]interface")
 		errs.AddError("whole-data", baseError)
 		return &errs
 	}
-	if dataType == "object" {
-		obj, ok := item.(map[string]interface{})
-		if !ok {
-			baseError.AddMessage("en", "invalid format provided for the data, can only be map[string]interface or []map[string]interface")
-			errs.AddError("whole-data-obj", baseError)
-			return &errs
-		}
-		Logs.DEBUG("validating the object", obj)
-		return s.ValidateObject(obj, nil)
-	} else {
-		arr, ok := item.([]map[string]interface{})
-		if !ok {
-			baseError.AddMessage("en", "invalid format provided for the data, can only be map[string]interface or []map[string]interface")
-			errs.AddError("whole-data-arr", baseError)
-			return &errs
-		}
-		Logs.DEBUG("validating the array", arr)
-		return s.ValidateArray(arr)
-	}
 }
 
-func (s *Schematics) ValidateObject(jsonData map[string]interface{}, id *string) *errorHandler.Errors {
-	log.Println("validating the object")
+func (s *Schematics) ValidateObject(jsonData *map[string]interface{}, id *string) *errorHandler.Errors {
+	Logs.DEBUG("validating the object")
 	var errorMessages errorHandler.Errors
 	var baseError errorHandler.Error
-	flatData := *s.makeFlat(jsonData)
+	flatData := *s.makeFlat(*jsonData)
+	Logs.DEBUG("hereher after flat data --> ", flatData)
+	uniqueID := ""
+
+	if id != nil {
+		uniqueID = *id
+	}
+	Logs.DEBUG("after unique id")
 	var missingFromDependants []string
 	for target, field := range s.Schema.Fields {
 		baseError.Validator = "is-required"
 		matchingKeys := utils.FindMatchingKeys(flatData, string(target))
+		Logs.DEBUG("matching keys --> ", matchingKeys)
 		if len(matchingKeys) == 0 {
 			if field.IsRequired {
 				baseError.AddMessage("en", "this field is required")
@@ -220,13 +221,14 @@ func (s *Schematics) ValidateObject(jsonData map[string]interface{}, id *string)
 			}
 			continue
 		}
+		Logs.DEBUG("after is required --> ", matchingKeys)
 		//	check for dependencies
 		if len(field.DependsOn) > 0 {
 			missing := false
 			for _, d := range field.DependsOn {
 				matchDependsOn := utils.FindMatchingKeys(flatData, d)
 				if !(utils.StringInStrings(string(target), missingFromDependants) == false && len(matchDependsOn) > 0) {
-					log.Println(matchDependsOn)
+					Logs.DEBUG("matched depends on", matchDependsOn)
 					baseError.Validator = "depends-on"
 					baseError.AddMessage("en", "this field depends on other values which do not exists")
 					errorMessages.AddError(string(target), baseError)
@@ -241,9 +243,8 @@ func (s *Schematics) ValidateObject(jsonData map[string]interface{}, id *string)
 		}
 
 		for key, value := range matchingKeys {
-			validationError := field.Validate(value, s.Validators.ValidationFns, id)
+			validationError := field.Validate(value, s.Validators.ValidationFns, &uniqueID)
 			Logs.DEBUG(validationError)
-			Logs.DEBUG("validation error with pointer", *validationError)
 			if validationError != nil {
 				errorMessages.AddError(key, *validationError)
 			}
@@ -272,9 +273,9 @@ func (s *Schematics) ValidateArray(jsonData []map[string]interface{}) *errorHand
 		}
 
 		id := arrayId.(string)
-		errorMessages = s.ValidateObject(d, &id)
+		errorMessages = s.ValidateObject(&d, &id)
 		if errorMessages.HasErrors() {
-			log.Println("has errors", errorMessages.GetStrings("en", "%data\n"))
+			Logs.ERROR("has errors", errorMessages.GetStrings("en", "%data\n"))
 			errs.MergeErrors(errorMessages)
 		}
 		i = i + 1

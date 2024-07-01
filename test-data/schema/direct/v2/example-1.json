@@ -10,8 +10,6 @@
     "validators": [{
       "name": "IsString"
     }, {
-      "name": "IsRequired"
-    }, {
       "name": "MaxLengthAllowed",
       "attributes": {
         "max": 20
