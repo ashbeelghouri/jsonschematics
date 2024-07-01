@@ -202,7 +202,7 @@ func (s *Schematics) ValidateObject(jsonData *map[string]interface{}, id *string
 	var errorMessages errorHandler.Errors
 	var baseError errorHandler.Error
 	flatData := *s.makeFlat(*jsonData)
-	Logs.DEBUG("hereher after flat data --> ", flatData)
+	Logs.DEBUG("here after flat data --> ", flatData)
 	uniqueID := ""
 
 	if id != nil {

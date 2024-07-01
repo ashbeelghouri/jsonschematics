@@ -106,7 +106,10 @@ func transformSchematics(s Schematics) *v0.Schematics {
 	baseSchematics.Separator = s.Separator
 	baseSchematics.Validators = s.Validators
 	baseSchematics.Operators = s.Operators
+	baseSchematics.Validators.BasicValidators()
+	baseSchematics.Operators.LoadBasicOperations()
 	baseSchematics.Schema = *transformSchema(s.Schema)
+
 	return &baseSchematics
 }
 
@@ -127,6 +130,7 @@ func transformSchema(schema Schema) *v0.Schema {
 			AdditionalInformation: field.AdditionalInformation,
 		}
 	}
+
 	return &baseSchema
 }
 
