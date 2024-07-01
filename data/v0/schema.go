@@ -118,7 +118,13 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 	err.Value = value
 	err.ID = id
 	err.Validator = "unknown"
+	if f.Validators == nil {
+		err.AddMessage("en", "no validators defined")
+		return &err
+	}
 	for name, constants := range f.Validators {
+		err.Validator = name
+		Logs.DEBUG("Validator: ", name, constants)
 		if name != "" {
 			Logs.DEBUG("Name of the validator is not given: ", name)
 			err.Validator = name
@@ -126,7 +132,7 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 		if f.IsRequired && value == nil {
 			err.Validator = "Required"
 			err.AddMessage("en", "this is a required field")
-			Logs.DEBUG("ERR: ", err)
+			Logs.DEBUG("Field is required but value is null")
 			return &err
 		}
 
@@ -136,19 +142,27 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 
 		var fn validators.Validator
 		fn, exists := allValidators[name]
+		Logs.DEBUG("function exists? ", exists)
 		if !exists {
-			Logs.ERROR("does not exists here!!", name)
+			Logs.ERROR("function not found", name)
 			err.AddMessage("en", "validator not registered")
 			return &err
 		}
-		if err1 := fn(value, constants.Attributes); err1 != nil {
-			if !(constants.Error != "" && f.L10n != nil) {
-				err.AddMessage("en", err1.Error())
-				return &err
+
+		fnError := fn(value, constants.Attributes)
+		Logs.DEBUG("fnError: ", fnError)
+		if fnError != nil {
+			if constants.Error != "" {
+				Logs.DEBUG("Custom Error is Defined", constants.Error)
+				err.AddMessage("en", constants.Error)
 			}
-			for locale, msg := range f.L10n {
-				if msg == nil {
-					err.AddMessage(locale, msg.(string))
+
+			if f.L10n != nil {
+				for locale, msg := range f.L10n {
+					if msg != nil {
+						Logs.DEBUG("L10n: ", locale, msg)
+						err.AddMessage(locale, msg.(string))
+					}
 				}
 			}
 			return &err
