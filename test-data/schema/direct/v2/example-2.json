@@ -1,45 +1,81 @@
 {
-  "fields": [
-    {
-      "display_name": "Quantity",
-      "name": "Quantity",
-      "type": "number",
-      "required": true,
-      "description": "check the quantity for 0 values",
-      "depends_on": [],
-      "target_key": "quantity",
-      "validators": [
-        {
-          "name": "IsNumber",
-          "error": "quantity should be numeric value"
-        },
-        {
-          "name": "MinAllowed",
-          "error": "least 1 item should be provided as a quantity to create a variant",
-          "attributes": {
-            "min": 1
-          }
+  "version": "2",
+  "fields": [{
+    "name": "",
+    "display_name": "",
+    "required": false,
+    "depends_on": [],
+    "target_key": "user.profile.name.first",
+    "description": "",
+    "validators": [{
+      "name": "IsString"
+    }, {
+      "name": "MaxLengthAllowed",
+      "attributes": {
+        "max": 20
+      },
+      "error": "user's first name should have maximum 20 characters",
+      "l10n": {
+        "ar": "سي شسيشسشسيش شسيشس شسيضصثضصث قفلربل ٦ع لبلا ثفق"
+      }
+    }],
+    "operators": [{
+      "name": "Capitalize"
+    }],
+    "l10n": {
+      "description": {
+        "locale": {
+          "ar": ""
         }
-      ]
-    },
-    {
-      "name": "Product ID",
-      "type": "string",
-      "required": false,
-      "description": "check if this is a valid product",
-      "depends_on": [],
-      "target_key": "product_id",
-      "validators": [
-        {
-          "name": "IsString",
-          "error": "Product id should be a string"
-        },
-        {
-          "name": "ValidProductID",
-          "error": "This product does not exists in our system"
-        }
-      ]
+      }
     }
-  ],
-  "version": "2"
+  }, {
+    "depends_on": [],
+    "required": false,
+    "target_key": "user.profile.name.last",
+    "description": "",
+    "validators": [{
+      "name": "IsString"
+    }, {
+      "name": "IsRequired"
+    }, {
+      "name": "MinLengthAllowed",
+      "attributes": {
+        "min": 10
+      },
+      "error": "user's last name should have minimum 10 characters"
+    }],
+    "operators": [{
+      "name": "Capitalize"
+    }]
+  }, {
+    "depends_on": [],
+    "required": false,
+    "target_key": "user.profile.age",
+    "description": "",
+    "validators": [{
+      "name": "IsNumber"
+    }, {
+      "name": "IsRequired"
+    }, {
+      "name": "MaxAllowed",
+      "attributes": {
+        "max": 20
+      },
+      "error": "user's age should not be greater than 20"
+    }]
+  }, {
+    "depends_on": ["user.profile.name.first", "user.profile.name.last", "user.profile.social_links.facebook"],
+    "target_key": "user.profile.email",
+    "description": "",
+    "validators": [{
+      "name": "IsString"
+    }, {
+      "name": "IsEmail",
+      "error": "user's first name should have maximum 20 characters"
+    }],
+    "operators": [{
+      "name": "Capitalize"
+    }]
+  }]
 }
