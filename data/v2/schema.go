@@ -29,6 +29,7 @@ type Schema struct {
 
 type Field struct {
 	DependsOn             []string               `json:"depends_on"`
+	DisplayName           string                 `json:"display_name"`
 	Name                  string                 `json:"name"`
 	TargetKey             string                 `json:"target_key"`
 	Type                  string                 `json:"type"`

@@ -33,6 +33,7 @@ type Schema struct {
 
 type Field struct {
 	DependsOn             []string               `json:"depends_on"`
+	DisplayName           string                 `json:"display_name"`
 	Name                  string                 `json:"name"`
 	Type                  string                 `json:"type"`
 	IsRequired            bool                   `json:"required"`
