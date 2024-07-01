@@ -75,6 +75,7 @@ func (s *Schematics) LoadJsonSchemaFile(path string) error {
 		Logs.ERROR("Failed to unmarshall schema file", err)
 		return err
 	}
+	Logs.DEBUG("Schema Loaded From File: ", schema)
 	s.Schema = schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
@@ -99,6 +100,7 @@ func (s *Schematics) LoadMap(schemaMap interface{}) error {
 		Logs.ERROR("Invalid Schema", err)
 		return err
 	}
+	Logs.DEBUG("Schema Loaded From MAP: ", schema)
 	s.Schema = schema
 	s.Validators.BasicValidators()
 	s.Operators.LoadBasicOperations()
@@ -118,11 +120,13 @@ func (f *Field) Validate(value interface{}, allValidators map[string]validators.
 	err.Validator = "unknown"
 	for name, constants := range f.Validators {
 		if name != "" {
+			Logs.DEBUG("Name of the validator is not given: ", name)
 			err.Validator = name
 		}
 		if f.IsRequired && value == nil {
 			err.Validator = "Required"
 			err.AddMessage("en", "this is a required field")
+			Logs.DEBUG("ERR: ", err)
 			return &err
 		}
 
@@ -180,10 +184,22 @@ func (s *Schematics) Validate(jsonData interface{}) *errorHandler.Errors {
 		return &errs
 	}
 	if dataType == "object" {
-		obj := item.(map[string]interface{})
+		obj, ok := item.(map[string]interface{})
+		if !ok {
+			baseError.AddMessage("en", "invalid format provided for the data, can only be map[string]interface or []map[string]interface")
+			errs.AddError("whole-data-obj", baseError)
+			return &errs
+		}
+		Logs.DEBUG("validating the object", obj)
 		return s.ValidateObject(obj, nil)
 	} else {
-		arr := item.([]map[string]interface{})
+		arr, ok := item.([]map[string]interface{})
+		if !ok {
+			baseError.AddMessage("en", "invalid format provided for the data, can only be map[string]interface or []map[string]interface")
+			errs.AddError("whole-data-arr", baseError)
+			return &errs
+		}
+		Logs.DEBUG("validating the array", arr)
 		return s.ValidateArray(arr)
 	}
 }
@@ -240,7 +256,7 @@ func (s *Schematics) ValidateObject(jsonData map[string]interface{}, id *string)
 }
 
 func (s *Schematics) ValidateArray(jsonData []map[string]interface{}) *errorHandler.Errors {
-	log.Println("validating the array")
+	Logs.DEBUG("validating the array")
 	var errs errorHandler.Errors
 	i := 0
 	for _, d := range jsonData {
