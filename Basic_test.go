@@ -13,7 +13,8 @@ func TestV2Validate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	content, err := os.ReadFile("test-data/data/direct/v2/example-2.json")
+	schematics.Validators.RegisterValidator("NewFun", NewFun)
+	content, err := os.ReadFile("test-data/data/direct/v2/example.json")
 	if err != nil {
 		t.Error(err)
 	}
@@ -23,4 +24,10 @@ func TestV2Validate(t *testing.T) {
 	}
 	errs := schematics.Validate(jsonData)
 	log.Println(errs.GetStrings("en", "%data\n"))
+}
+
+func NewFun(i interface{}, attr map[string]interface{}) error {
+	log.Println(i)
+	log.Println(attr)
+	return nil
 }

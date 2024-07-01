@@ -32,10 +32,10 @@ func (e *Error) AddMessage(local string, message string) {
 }
 func (e *Error) updateData(target string) Target {
 	var t string
-	convertedID, ok := e.ID.(*string)
+	convertedID, ok := e.ID.(string)
 
 	if ok && e.ID != nil {
-		t = fmt.Sprintf("%s:%s", *convertedID, target)
+		t = fmt.Sprintf("%s:%s", convertedID, target)
 	} else {
 		t = fmt.Sprintf("%s", target)
 	}
