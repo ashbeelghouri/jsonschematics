@@ -242,6 +242,8 @@ func (s *Schematics) ValidateObject(jsonData map[string]interface{}, id *string)
 
 		for key, value := range matchingKeys {
 			validationError := field.Validate(value, s.Validators.ValidationFns, id)
+			Logs.DEBUG(validationError)
+			Logs.DEBUG("validation error with pointer", *validationError)
 			if validationError != nil {
 				errorMessages.AddError(key, *validationError)
 			}

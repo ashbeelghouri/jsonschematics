@@ -8,6 +8,7 @@ import (
 type Logger struct {
 	PrintDebugLogs bool
 	PrintErrorLogs bool
+	PreText        string
 }
 
 func (l *Logger) DEBUG(v ...interface{}) {
@@ -16,7 +17,7 @@ func (l *Logger) DEBUG(v ...interface{}) {
 		if err != nil {
 			log.Println(err)
 		}
-		log.Println(string(bytes))
+		log.Println(l.PreText, string(bytes))
 	}
 }
 
@@ -26,6 +27,6 @@ func (l *Logger) ERROR(v ...interface{}) {
 		if err != nil {
 			log.Println(err)
 		}
-		log.Println("------ [ERROR] ------", string(bytes))
+		log.Println(l.PreText, "------ [ERROR] ------", string(bytes))
 	}
 }
